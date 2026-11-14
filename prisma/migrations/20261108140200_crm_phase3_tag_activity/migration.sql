@@ -1,0 +1,1 @@
+ALTER TYPE "LeadActivityType" ADD VALUE 'TAG_CHANGE';

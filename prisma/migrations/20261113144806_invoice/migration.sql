@@ -1,0 +1,2 @@
+-- RenameIndex
+ALTER INDEX "DocumentNumberingConfig_financialYearId_documentType_branchCode" RENAME TO "DocumentNumberingConfig_financialYearId_documentType_branch_key";

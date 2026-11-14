@@ -1,0 +1,5 @@
+import { NextRequest } from "next/server";
+import { apiError, apiSuccess } from "@/lib/api-response";
+import { getAuthenticatedUserFromRequest } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+export async function GET(request: NextRequest) { const user=await getAuthenticatedUserFromRequest(request); if(!user)return apiError(401,"UNAUTHENTICATED","Sign in required.");if(user.role!=="SALES_EXECUTIVE")return apiError(403,"FORBIDDEN","Sales Executive access is required."); const where={assignedToId:user.id}; const [totalAssigned,newAssigned,awaitingFollowUp,qualified,converted,recentLeads]=await Promise.all([prisma.lead.count({where}),prisma.lead.count({where:{...where,stage:{in:["NEW","ASSIGNED"]}}}),prisma.leadFollowUp.count({where:{assignedToId:user.id,status:"PENDING"}}),prisma.lead.count({where:{...where,stage:"QUALIFIED"}}),prisma.lead.count({where:{...where,stage:"CONVERTED"}}),prisma.lead.findMany({where,orderBy:{assignedAt:"desc"},take:5,select:{id:true,referenceNumber:true,businessName:true,stage:true,createdAt:true}})]); return apiSuccess({totalAssigned,newAssigned,awaitingFollowUp,qualified,converted,recentLeads}); }

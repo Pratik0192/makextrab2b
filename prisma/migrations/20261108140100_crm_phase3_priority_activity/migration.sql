@@ -1,0 +1,1 @@
+ALTER TYPE "LeadActivityType" ADD VALUE 'PRIORITY_CHANGE';
