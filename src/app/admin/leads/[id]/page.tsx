@@ -71,7 +71,9 @@ export default function AdminLeadDetailPage({
   const [conversionOpen, setConversionOpen] = useState(false);
   const [conversionBusy, setConversionBusy] = useState(false);
   const [conversionError, setConversionError] = useState("");
-  const [conversionData, setConversionData] = useState<Record<string,string>>({});
+  const [conversionData, setConversionData] = useState<Record<string, string>>(
+    {},
+  );
   const [duplicateMatches, setDuplicateMatches] = useState<
     Array<{
       id: string;
@@ -309,10 +311,20 @@ export default function AdminLeadDetailPage({
   async function convertLead() {
     if (!lead) return;
     const currentLead = lead;
-    setConversionBusy(true); setConversionError("");
-    try { const response = await api.post(`/api/admin/leads/${currentLead.id}/convert`, conversionData); toast.success("Lead converted to customer."); router.push(`/admin/customers/${response.data.customer.id}`); }
-    catch (e) { setConversionError(apiErrorMessage(e, "Lead could not be converted.")); }
-    finally { setConversionBusy(false); }
+    setConversionBusy(true);
+    setConversionError("");
+    try {
+      const response = await api.post(
+        `/api/admin/leads/${currentLead.id}/convert`,
+        conversionData,
+      );
+      toast.success("Lead converted to customer.");
+      router.push(`/admin/customers/${response.data.customer.id}`);
+    } catch (e) {
+      setConversionError(apiErrorMessage(e, "Lead could not be converted."));
+    } finally {
+      setConversionBusy(false);
+    }
   }
   return (
     <div className="mx-auto max-w-7xl space-y-5">
@@ -336,7 +348,28 @@ export default function AdminLeadDetailPage({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {isSuperAdmin && lead.stage === "QUALIFIED" && <button type="button" onClick={() => { setConversionData({businessName:lead.businessName,buyerName:lead.buyerName,mobile:lead.mobile,whatsappNumber:lead.whatsappNumber||"",email:lead.email,gstin:lead.gstin||"",city:lead.city,state:lead.state,pincode:lead.pincode}); setConversionOpen(true); }} className="rounded-md bg-[#672f35] px-3 py-2 text-xs font-semibold text-white">Convert to Customer</button>}
+            {isSuperAdmin && lead.stage === "QUALIFIED" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setConversionData({
+                    businessName: lead.businessName,
+                    buyerName: lead.buyerName,
+                    mobile: lead.mobile,
+                    whatsappNumber: lead.whatsappNumber || "",
+                    email: lead.email,
+                    gstin: lead.gstin || "",
+                    city: lead.city,
+                    state: lead.state,
+                    pincode: lead.pincode,
+                  });
+                  setConversionOpen(true);
+                }}
+                className="rounded-md bg-[#672f35] px-3 py-2 text-xs font-semibold text-white"
+              >
+                Convert to Customer
+              </button>
+            )}
             <span className="rounded-full bg-sky-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
               {labelFor(lead.stage)}
             </span>
@@ -347,7 +380,89 @@ export default function AdminLeadDetailPage({
         </div>
       </div>
 
-      {conversionOpen && <div role="dialog" aria-modal="true" aria-labelledby="convert-title" className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"><div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-lg bg-white p-6"><h2 id="convert-title" className="text-xl font-semibold">Review customer details</h2><p className="my-2 text-sm text-slate-500">Corrected values are saved on the Customer record. The original lead remains unchanged.</p><p className="mb-3 text-xs">Lead: {lead.referenceNumber} · Approval: {lead.buyerApprovalStatus || "PENDING"}</p><div className="grid gap-3 sm:grid-cols-2">{([ ["businessName","Business name"],["buyerName","Buyer name"],["mobile","Mobile"],["whatsappNumber","WhatsApp"],["email","Email"],["gstin","GSTIN"],["city","City"],["state","State"],["pincode","Pincode"] ] as const).map(([key,label])=><label key={key} className="text-xs text-slate-600">{label}<input value={conversionData[key]||""} onChange={e=>setConversionData(current=>({...current,[key]:e.target.value}))} className="mt-1 block w-full rounded border px-3 py-2 text-sm" /></label>)}</div><div className="mt-4 rounded bg-slate-50 p-3 text-xs"><strong>Verification checklist</strong>{(lead.verificationChecks||[]).map(check=><p key={check.checkType}>{labelFor(check.checkType)}: {labelFor(check.status)}</p>)}<p>Buyer approval: {labelFor(lead.buyerApprovalStatus||"PENDING")}</p></div>{conversionError&&<p role="alert" className="mt-3 text-sm text-rose-700">{conversionError}</p>}<div className="mt-5 flex justify-end gap-2"><button onClick={()=>setConversionOpen(false)} className="rounded border px-4 py-2 text-sm">Close</button><button disabled={conversionBusy} onClick={()=>void convertLead()} className="rounded bg-[#672f35] px-4 py-2 text-sm text-white disabled:opacity-50">{conversionBusy?"Converting…":"Confirm conversion"}</button></div></div></div>}
+      {conversionOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="convert-title"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+        >
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-lg bg-white p-6">
+            <h2 id="convert-title" className="text-xl font-semibold">
+              Review customer details
+            </h2>
+            <p className="my-2 text-sm text-slate-500">
+              Corrected values are saved on the Customer record. The original
+              lead remains unchanged.
+            </p>
+            <p className="mb-3 text-xs">
+              Lead: {lead.referenceNumber} · Approval:{" "}
+              {lead.buyerApprovalStatus || "PENDING"}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(
+                [
+                  ["businessName", "Business name"],
+                  ["buyerName", "Buyer name"],
+                  ["mobile", "Mobile"],
+                  ["whatsappNumber", "WhatsApp"],
+                  ["email", "Email"],
+                  ["gstin", "GSTIN"],
+                  ["city", "City"],
+                  ["state", "State"],
+                  ["pincode", "Pincode"],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key} className="text-xs text-slate-600">
+                  {label}
+                  <input
+                    value={conversionData[key] || ""}
+                    onChange={(e) =>
+                      setConversionData((current) => ({
+                        ...current,
+                        [key]: e.target.value,
+                      }))
+                    }
+                    className="mt-1 block w-full rounded border border-slate-300 px-3 py-2 text-sm bg-white"
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="mt-4 rounded bg-slate-50 p-3 text-xs">
+              <strong>Verification checklist</strong>
+              {(lead.verificationChecks || []).map((check) => (
+                <p key={check.checkType}>
+                  {labelFor(check.checkType)}: {labelFor(check.status)}
+                </p>
+              ))}
+              <p>
+                Buyer approval:{" "}
+                {labelFor(lead.buyerApprovalStatus || "PENDING")}
+              </p>
+            </div>
+            {conversionError && (
+              <p role="alert" className="mt-3 text-sm text-rose-700">
+                {conversionError}
+              </p>
+            )}
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setConversionOpen(false)}
+                className="rounded border px-4 py-2 text-sm"
+              >
+                Close
+              </button>
+              <button
+                disabled={conversionBusy}
+                onClick={() => void convertLead()}
+                className="rounded bg-[#672f35] px-4 py-2 text-sm text-white disabled:opacity-50"
+              >
+                {conversionBusy ? "Converting…" : "Confirm conversion"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <DetailSection title="Business information">
         <dl className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
