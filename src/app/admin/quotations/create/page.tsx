@@ -1,2 +1,4 @@
-import {QuotationCreate} from "@/components/crm/QuotationWorkspace";
-export default function CreateQuotationPage(){return <QuotationCreate/>}
+import { QuotationCreate } from "@/components/crm/QuotationWorkspace";
+export default function CreateQuotationPage() {
+  return <QuotationCreate />;
+}

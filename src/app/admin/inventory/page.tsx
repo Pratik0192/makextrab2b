@@ -241,13 +241,13 @@ export default function InventoryPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => start("in")}
-            className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2.5 text-sm"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm"
           >
             <ArrowDownToLine size={16} /> Stock in
           </button>
           <button
             onClick={() => start("out")}
-            className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2.5 text-sm"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm"
           >
             <ArrowUpFromLine size={16} /> Stock out
           </button>
@@ -269,27 +269,27 @@ export default function InventoryPage() {
               });
               setTransferOpen(true);
             }}
-            className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2.5 text-sm"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm"
           >
             <ArrowLeftRight size={16} /> Transfer
           </button>
           <button
             onClick={() => void showLedger()}
-            className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2.5 text-sm"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm"
           >
             <History size={16} /> Ledger
           </button>
           <button
             onClick={() => void showTransfers()}
-            className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2.5 text-sm"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm"
           >
             Transfer history
           </button>
         </div>
       </div>
-      <div className="rounded-lg border bg-white">
-        <div className="flex flex-wrap items-center gap-3 border-b p-4">
-          <label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-md border px-3">
+      <div className="rounded-lg border border-slate-300 bg-white">
+        <div className="flex flex-wrap items-center gap-3 border-b border-slate-300 p-4">
+          <label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-md border border-slate-300 px-3">
             <Search size={16} className="text-slate-400" />
             <input
               value={search}
@@ -307,7 +307,7 @@ export default function InventoryPage() {
               setWarehouseId(e.target.value);
               setPage(1);
             }}
-            className="h-10 rounded-md border px-3 text-sm bg-white"
+            className="h-10 rounded-md border border-slate-300 px-3 text-sm bg-white"
           >
             <option value="">All warehouses</option>
             {warehouses.map((w) => (
@@ -343,7 +343,7 @@ export default function InventoryPage() {
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-300">
               {loading ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center">
@@ -386,7 +386,7 @@ export default function InventoryPage() {
                     <td className="px-4 py-3">
                       <button
                         onClick={() => void showLedger(b)}
-                        className="rounded border px-2.5 py-1.5 text-xs"
+                        className="rounded border border-slate-300 px-2.5 py-1.5 text-xs"
                       >
                         History
                       </button>
@@ -397,7 +397,7 @@ export default function InventoryPage() {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between border-t px-5 py-3 text-xs text-slate-500">
+        <div className="flex items-center justify-between border-t border-slate-300 px-5 py-3 text-xs text-slate-500">
           <span>
             Page {page} of {totalPages}
           </span>
@@ -405,14 +405,14 @@ export default function InventoryPage() {
             <button
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
-              className="rounded border px-3 py-1.5 disabled:opacity-40"
+              className="rounded border border-slate-300 px-3 py-1.5 disabled:opacity-40"
             >
               Previous
             </button>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage(page + 1)}
-              className="rounded border px-3 py-1.5 disabled:opacity-40"
+              className="rounded border border-slate-300 px-3 py-1.5 disabled:opacity-40"
             >
               Next
             </button>
@@ -445,7 +445,7 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setForm({ ...form, productId: e.target.value })
                 }
-                className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
               >
                 <option value="">Select product</option>
                 {products.map((p) => (
@@ -463,7 +463,7 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setForm({ ...form, warehouseId: e.target.value })
                 }
-                className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
               >
                 <option value="">Select warehouse</option>
                 {warehouses.map((w) => (
@@ -485,7 +485,7 @@ export default function InventoryPage() {
                   onChange={(e) =>
                     setForm({ ...form, quantity: e.target.value })
                   }
-                  className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                  className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
                 />
                 {mode === "adjustment" && (
                   <span className="mt-1 block text-xs font-normal text-slate-500">
@@ -503,7 +503,7 @@ export default function InventoryPage() {
                         e.target.value as "increase" | "decrease",
                       )
                     }
-                    className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                    className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
                   >
                     <option value="increase">Increase</option>
                     <option value="decrease">Decrease</option>
@@ -521,7 +521,7 @@ export default function InventoryPage() {
                     onChange={(e) =>
                       setForm({ ...form, reorderLevel: e.target.value })
                     }
-                    className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                    className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
                   />
                 </label>
               )}
@@ -540,7 +540,7 @@ export default function InventoryPage() {
                       ? "Reason for stock out"
                       : "Reason for receipt (optional)"
                 }
-                className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
               />
             </label>
             <label className="block text-sm font-medium">
@@ -550,7 +550,7 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setForm({ ...form, reference: e.target.value })
                 }
-                className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
               />
             </label>
             <label className="block text-sm font-medium">
@@ -559,7 +559,7 @@ export default function InventoryPage() {
                 rows={2}
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                className="mt-1.5 w-full rounded-md border p-3 font-normal bg-white"
+                className="mt-1.5 w-full rounded-md border border-slate-300 p-3 font-normal bg-white"
               />
             </label>
             <div className="flex justify-end gap-2">
@@ -567,7 +567,7 @@ export default function InventoryPage() {
                 type="button"
                 disabled={busy}
                 onClick={() => setMode(null)}
-                className="rounded-md border px-4 py-2 text-sm"
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm"
               >
                 Cancel
               </button>
@@ -605,7 +605,7 @@ export default function InventoryPage() {
                     productId: e.target.value,
                   })
                 }
-                className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
               >
                 <option value="">Select product</option>
                 {products
@@ -629,7 +629,7 @@ export default function InventoryPage() {
                       sourceWarehouseId: e.target.value,
                     })
                   }
-                  className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                  className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
                 >
                   <option value="">Select source</option>
                   {warehouses
@@ -652,7 +652,7 @@ export default function InventoryPage() {
                       destinationWarehouseId: e.target.value,
                     })
                   }
-                  className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                  className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
                 >
                   <option value="">Select destination</option>
                   {warehouses
@@ -679,7 +679,7 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setTransferForm({ ...transferForm, quantity: e.target.value })
                 }
-                className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
               />
             </label>
             <label className="block text-sm font-medium">
@@ -692,7 +692,7 @@ export default function InventoryPage() {
                     reference: e.target.value,
                   })
                 }
-                className="mt-1.5 h-10 w-full rounded-md border px-3 font-normal bg-white"
+                className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 font-normal bg-white"
               />
             </label>
             <label className="block text-sm font-medium">
@@ -703,7 +703,7 @@ export default function InventoryPage() {
                 onChange={(e) =>
                   setTransferForm({ ...transferForm, notes: e.target.value })
                 }
-                className="mt-1.5 w-full rounded-md border p-3 font-normal bg-white"
+                className="mt-1.5 w-full rounded-md border border-slate-300 p-3 font-normal bg-white"
               />
             </label>
             <div className="rounded-md bg-[#fbf5f3] p-3 text-sm text-slate-700">
@@ -725,7 +725,7 @@ export default function InventoryPage() {
                 type="button"
                 disabled={busy}
                 onClick={() => setTransferOpen(false)}
-                className="rounded-md border px-4 py-2 text-sm"
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm"
               >
                 Cancel
               </button>
@@ -747,7 +747,7 @@ export default function InventoryPage() {
           }}
         >
           <div className="max-h-[85vh] w-full max-w-6xl overflow-hidden rounded-xl bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b p-5">
+            <div className="flex items-center justify-between border-b border-slate-300 p-5">
               <div>
                 <h3 className="text-lg font-semibold">Transfer history</h3>
                 <p className="text-sm text-slate-500">
@@ -757,7 +757,7 @@ export default function InventoryPage() {
               </div>
               <button
                 onClick={() => setTransferRows(null)}
-                className="rounded border px-3 py-1.5 text-sm"
+                className="rounded border border-slate-300 px-3 py-1.5 text-sm"
               >
                 Close
               </button>
@@ -816,11 +816,11 @@ export default function InventoryPage() {
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-end gap-2 border-t p-3">
+            <div className="flex justify-end gap-2 border-t border-slate-300 p-3">
               <button
                 disabled={transferPage <= 1}
                 onClick={() => void showTransfers(transferPage - 1)}
-                className="rounded border px-3 py-1.5 text-xs disabled:opacity-40"
+                className="rounded border border-slate-300 px-3 py-1.5 text-xs disabled:opacity-40"
               >
                 Previous
               </button>
@@ -830,7 +830,7 @@ export default function InventoryPage() {
               <button
                 disabled={transferPage >= transferPages}
                 onClick={() => void showTransfers(transferPage + 1)}
-                className="rounded border px-3 py-1.5 text-xs disabled:opacity-40"
+                className="rounded border border-slate-300 px-3 py-1.5 text-xs disabled:opacity-40"
               >
                 Next
               </button>
@@ -846,7 +846,7 @@ export default function InventoryPage() {
           }}
         >
           <div className="max-h-[85vh] w-full max-w-5xl overflow-hidden rounded-xl bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b p-5">
+            <div className="flex items-center justify-between border-b border-slate-300 p-5">
               <div>
                 <h3 className="text-lg font-semibold">Stock ledger</h3>
                 <p className="text-sm text-slate-500">
@@ -855,7 +855,7 @@ export default function InventoryPage() {
               </div>
               <button
                 onClick={() => setLedger(null)}
-                className="rounded border px-3 py-1.5 text-sm"
+                className="rounded border border-slate-300 px-3 py-1.5 text-sm"
               >
                 Close
               </button>
