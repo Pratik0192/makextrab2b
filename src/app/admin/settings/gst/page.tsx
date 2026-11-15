@@ -1,2 +1,4 @@
 import BillingSettings from "@/components/admin/BillingSettings";
-export default function GstSettingsPage() { return <BillingSettings />; }
+export default function GstSettingsPage() {
+  return <BillingSettings />;
+}

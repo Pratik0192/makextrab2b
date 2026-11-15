@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import api from "@/lib/axios";
+import { Trash2 } from "lucide-react";
 type Quote = {
   id: string;
   quotationNumber: string;
@@ -120,7 +121,7 @@ export function QuotationList() {
           />
           <Link
             href={`${base}/quotations/create`}
-            className="rounded bg-[#672f35] px-4 py-2 text-sm text-white"
+            className="rounded bg-[#9D174D] px-4 py-2 text-sm text-white"
           >
             New quotation
           </Link>
@@ -156,7 +157,7 @@ export function QuotationList() {
             ) : (
               rows.map((row) => (
                 <tr key={row.id}>
-                  <td className="px-4 py-3 font-semibold text-[#672f35]">
+                  <td className="px-4 py-3 font-semibold text-[#9D174D]">
                     {row.quotationNumber}
                   </td>
                   <td className="px-4 py-3">
@@ -339,8 +340,8 @@ export function QuotationCreate() {
           {error}
         </p>
       )}
-      <section className="space-y-4 rounded-lg border border-slate-300 bg-white p-5">
-        <label className="block text-sm">
+      <section className="grid grid-cols-4 gap-2 rounded-lg border border-slate-300 bg-white p-5">
+        <label className="block text-sm col-span-3">
           Customer
           <select
             className="mt-1 block w-full rounded border border-slate-300 p-2 bg-white"
@@ -365,14 +366,14 @@ export function QuotationCreate() {
             Super Admin confirms this inactive customer can receive a quotation
           </label>
         )}
-        <label className="block text-sm">
+        <label className="block text-sm col-span-1">
           Valid until
           <input
             type="date"
             min={new Date().toISOString().slice(0, 10)}
             value={validUntil}
             onChange={(e) => setValid(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 p-2 bg-white"
+            className="mt-1 w-full block rounded border border-slate-300 p-2 bg-white"
           />
         </label>
       </section>
@@ -381,10 +382,10 @@ export function QuotationCreate() {
         {lines.map((line, i) => (
           <div
             key={i}
-            className="grid gap-2 border-b border-slate-300 pb-3 md:grid-cols-[2fr_1fr_1fr_1fr_auto]"
+            className="grid gap-2 border-b border-slate-300 items-center pb-3 md:grid-cols-[2fr_1fr_1fr_1fr_auto]"
           >
             <select
-              className="rounded border border-slate-300 p-2 text-sm bg-white"
+              className="h-9 inline-flex items-center rounded border border-slate-300 p-2 text-sm bg-white"
               value={line.productId}
               onChange={(e) => {
                 const p = products.find((item) => item.id === e.target.value);
@@ -424,35 +425,25 @@ export function QuotationCreate() {
                 )
               }
               placeholder="Qty"
-              className="rounded border border-slate-300 p-2 bg-white "
+              className="h-9 inline-flex items-center rounded border border-slate-300 p-2 bg-white "
             />
-            <label className="text-xs text-slate-600">
-              Unit price / piece
-              <input
-                aria-label="Unit price per piece"
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={line.unitPrice}
-                readOnly={!canOverride}
-                onChange={(e) =>
-                  setLines((old) =>
-                    old.map((x, j) =>
+            <input
+              aria-label="Unit price per piece"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={line.unitPrice}
+              readOnly={!canOverride}
+              onChange={(e) =>
+                setLines((old) =>
+                  old.map((x, j) =>
                       j === i ? { ...x, unitPrice: e.target.value } : x,
                     ),
                   )
                 }
                 placeholder="Price not configured"
-                className="mt-1 w-full rounded border border-slate-300 p-2 read-only:bg-slate-50 bg-white"
+                className="h-9 inline-flex items-center w-full rounded border border-slate-300 p-2 read-only:bg-slate-50 bg-white"
               />
-              <span className="mt-1 block">
-                Current product price:{" "}
-                {products.find((p) => p.id === line.productId)?.wholesalePrice
-                  ? `₹${Number(products.find((p) => p.id === line.productId)?.wholesalePrice).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-                  : "Not configured"}
-                {canOverride && " · editable override"}
-              </span>
-            </label>
             <input
               aria-label="Line discount"
               type="number"
@@ -467,7 +458,7 @@ export function QuotationCreate() {
                 )
               }
               placeholder="Discount ₹"
-              className="rounded border border-slate-300 p-2 bg-white"
+              className="h-9 inline-flex items-center rounded border border-slate-300 p-2 bg-white"
             />
             <button
               onClick={() =>
@@ -475,11 +466,11 @@ export function QuotationCreate() {
                   old.length > 1 ? old.filter((_, j) => j !== i) : old,
                 )
               }
-              className="text-sm text-rose-700"
+              className="h-9 w-9 inline-flex items-center justify-center rounded text-red-600 hover:bg-red-50 transition"
             >
-              Remove
+              <Trash2 size={18} />
             </button>
-            <p className="text-xs text-slate-500 md:col-span-5">
+            <p className="text-xs text-slate-500 md:col-span-1">
               Gross line amount: ₹
               {(Number(line.unitPrice) * Number(line.quantity)).toLocaleString(
                 "en-IN",
@@ -492,6 +483,15 @@ export function QuotationCreate() {
                   Number(line.discount),
               ).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </p>
+            <p className="text-xs text-slate-600 md:col-span-1">
+              Quantity
+            </p>
+            <p className="text-xs text-slate-600 md:col-span-1">
+              Unit price / piece
+            </p>
+            <p className="text-xs text-slate-600 md:col-span-1">
+              Line Discount
+            </p>
           </div>
         ))}
         <button
@@ -501,7 +501,7 @@ export function QuotationCreate() {
               { productId: "", quantity: "10", unitPrice: "", discount: "0" },
             ])
           }
-          className="text-sm text-[#672f35] underline"
+          className="text-sm text-[#9D174D] underline"
         >
           Add product
         </button>
@@ -572,7 +572,7 @@ export function QuotationCreate() {
         <button
           onClick={() => void submit()}
           disabled={busy || !customerId || !validUntil}
-          className="rounded bg-[#672f35] px-5 py-2 text-sm text-white disabled:opacity-50"
+          className="rounded bg-[#9D174D] px-5 py-2 text-sm text-white disabled:opacity-50"
         >
           {busy ? "Saving…" : "Save draft"}
         </button>

@@ -86,7 +86,7 @@ export function InvoiceWorkspace({ isAdmin }: { isAdmin: boolean }) {
           {dispatches.map((d) => (
             <div
               key={d.id}
-              className="flex flex-wrap items-center justify-between gap-3 border border-slate-300-t pt-3 text-sm"
+              className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-300 pt-3 text-sm"
             >
               <div>
                 <p className="font-medium">
@@ -214,10 +214,10 @@ export function InvoiceWorkspace({ isAdmin }: { isAdmin: boolean }) {
           </thead>
           <tbody>
             {items.map((x) => (
-              <tr key={x.id} className="border border-slate-300-t">
+              <tr key={x.id} className="border-t border-slate-300">
                 <td className="p-3">
                   <Link
-                    className="font-medium text-[#672f35] underline"
+                    className="font-medium text-[#9D174D] underline"
                     href={`${isAdmin ? "/admin" : "/sales"}/invoices/${x.id}`}
                   >
                     {x.invoiceNumber ?? "Draft"}
@@ -421,7 +421,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
               Print
             </a>
             <a
-              className="rounded bg-[#672f35] px-3 py-2 text-sm text-white"
+              className="rounded bg-[#9D174D] px-3 py-2 text-sm text-white"
               href={`/api/invoices/${invoice.id}/pdf`}
             >
               Download PDF
@@ -486,7 +486,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
           </thead>
           <tbody>
             {invoice.items.map((x: Row) => (
-              <tr key={x.id} className="border border-slate-300-t">
+              <tr key={x.id} className="border-t border-slate-300">
                 <td className="p-3">
                   {x.productName}
                   <div className="text-xs text-slate-500">{x.description}</div>
@@ -521,7 +521,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
           Discount {money(invoice.discountTotal)} · Round-off{" "}
           {money(invoice.roundOff)}
         </p>
-        <p className="border border-slate-300-t pt-2 text-base font-semibold">
+        <p className="border-t border-slate-300 pt-2 text-base font-semibold">
           Invoice total {money(invoice.grandTotal)}
         </p>
         <p>
@@ -545,7 +545,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
             <label className="text-sm">
               Tax treatment
               <select
-                className="mt-1 block rounded border border-slate-300 p-2"
+                className="mt-1 block rounded border border-slate-300 p-2 bg-white"
                 value={treatment}
                 onChange={(e) => setTreatment(e.target.value)}
               >
@@ -556,7 +556,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
             <label className="text-sm">
               Place of supply
               <input
-                className="mt-1 block rounded border border-slate-300 p-2"
+                className="mt-1 block rounded border border-slate-300 p-2 bg-white"
                 value={placeOfSupply}
                 onChange={(e) => setPlaceOfSupply(e.target.value)}
               />
@@ -565,7 +565,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
               State code
               <input
                 maxLength={2}
-                className="mt-1 block w-24 rounded border border-slate-300 p-2"
+                className="mt-1 block w-24 rounded border border-slate-300 p-2 bg-white"
                 value={stateCode}
                 onChange={(e) => setStateCode(e.target.value)}
               />
@@ -574,7 +574,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
               Due date
               <input
                 type="date"
-                className="mt-1 block rounded border border-slate-300 p-2"
+                className="mt-1 block rounded border border-slate-300 p-2 bg-white"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
@@ -601,7 +601,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
                   }),
                 )
               }
-              className="self-end rounded border border-slate-300 px-3 py-2 text-sm"
+              className="self-end rounded border border-slate-300 px-3 py-2 text-sm bg-white"
             >
               Save draft
             </button>
@@ -713,7 +713,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
               <button
                 disabled={busy}
                 onClick={() => void recordPayment()}
-                className="rounded bg-[#672f35] px-3 py-2 text-sm text-white"
+                className="rounded bg-[#9D174D] px-3 py-2 text-sm text-white"
               >
                 Record Payment
               </button>

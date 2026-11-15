@@ -185,7 +185,7 @@ export default function StorefrontProductSections() {
         />
         <nav
           aria-label="Browse catalogue"
-          className="mb-8 flex flex-wrap justify-center gap-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#672f35]"
+          className="mb-8 flex flex-wrap justify-center gap-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#9D174D]"
         >
           <Link
             href="/products"

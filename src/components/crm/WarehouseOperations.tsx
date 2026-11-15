@@ -113,10 +113,10 @@ export default function WarehouseOperations() {
                     .includes(q.toLowerCase()),
                 )
                 .map((r) => (
-                  <tr className="border border-slate-300-t" key={r.id}>
+                  <tr className="border-t border-slate-300" key={r.id}>
                     <td className="p-3">
                       <Link
-                        className="underline text-[#672f35]"
+                        className="underline text-[#9D174D]"
                         href={`${base}/warehouse/orders/${r.id}`}
                       >
                         {r.orderNumber}
@@ -259,7 +259,7 @@ export default function WarehouseOperations() {
                 api.post(`/api/warehouse/orders/${order.id}/picking`),
               )
             }
-            className="mt-3 rounded bg-[#672f35] px-4 py-2 text-sm text-white"
+            className="mt-3 rounded bg-[#9D174D] px-4 py-2 text-sm text-white"
           >
             Create picking list
           </button>
@@ -308,7 +308,7 @@ export default function WarehouseOperations() {
                             [line.id]: Number(e.target.value),
                           })
                         }
-                        className="rounded border border-slate-300 p-2"
+                        className="rounded border border-slate-300 p-2 bg-white"
                       />
                       <button
                         disabled={busy}
@@ -389,7 +389,7 @@ export default function WarehouseOperations() {
                           [line.salesOrderItemId]: Number(e.target.value),
                         })
                       }
-                      className="rounded border border-slate-300 p-2"
+                      className="rounded border border-slate-300 p-2 bg-white"
                     />
                   </label>
                 );
@@ -428,7 +428,7 @@ export default function WarehouseOperations() {
                   setPack({});
                 });
               }}
-              className="mt-3 rounded bg-[#672f35] px-3 py-2 text-sm text-white"
+              className="mt-3 rounded bg-[#9D174D] px-3 py-2 text-sm text-white"
             >
               Create and complete package
             </button>
@@ -444,13 +444,13 @@ export default function WarehouseOperations() {
                 value={courier}
                 onChange={(e) => setCourier(e.target.value)}
                 placeholder="Transport / courier name"
-                className="rounded border border-slate-300 p-2 text-sm"
+                className="rounded border border-slate-300 p-2 text-sm bg-white"
               />
               <input
                 value={tracking}
                 onChange={(e) => setTracking(e.target.value)}
                 placeholder="Tracking / consignment number"
-                className="rounded border border-slate-300 p-2 text-sm"
+                className="rounded border border-slate-300 p-2 text-sm bg-white"
               />
             </div>
             <div className="mt-3 space-y-2">
@@ -471,7 +471,7 @@ export default function WarehouseOperations() {
                         [item.id]: Number(e.target.value),
                       })
                     }
-                    className="rounded border border-slate-300 p-2"
+                    className="rounded border border-slate-300 p-2 bg-white"
                   />
                 </label>
               ))}
@@ -503,7 +503,7 @@ export default function WarehouseOperations() {
                   setDispatch({});
                 })
               }
-              className="mt-3 rounded bg-[#672f35] px-3 py-2 text-sm text-white"
+              className="mt-3 rounded bg-[#9D174D] px-3 py-2 text-sm text-white"
             >
               Create and confirm dispatch
             </button>
@@ -516,7 +516,7 @@ export default function WarehouseOperations() {
           <p className="mt-2 text-sm text-slate-500">No dispatches yet.</p>
         ) : (
           order.dispatches.map((d: Row) => (
-            <div key={d.id} className="mt-3 border border-slate-300-t pt-3 text-sm">
+            <div key={d.id} className="mt-3 border-t border-slate-300 pt-3 text-sm">
               <p className="font-medium">
                 {d.reference} · {d.status} · {d.deliveryStatus}
               </p>
@@ -538,7 +538,7 @@ export default function WarehouseOperations() {
                     <select
                       value={deliveryStatus}
                       onChange={(e) => setDeliveryStatus(e.target.value)}
-                      className="rounded border border-slate-300 p-2"
+                      className="rounded border border-slate-300 p-2 bg-white"
                     >
                       {stages
                         .filter(
@@ -567,7 +567,7 @@ export default function WarehouseOperations() {
                           ),
                         )
                       }
-                      className="rounded border border-slate-300 px-3 py-2"
+                      className="rounded bg-[#9D174D] text-white px-3 py-2"
                     >
                       Update delivery
                     </button>

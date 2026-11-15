@@ -189,7 +189,7 @@ export default function BillingSettings() {
     <button
       disabled={busy}
       onClick={fn}
-      className="rounded bg-[#672f35] px-4 py-2 text-sm text-white disabled:opacity-50"
+      className="rounded bg-[#9D174D] px-4 py-2 text-sm text-white disabled:opacity-50"
     >
       {busy ? "Saving…" : label}
     </button>
@@ -211,7 +211,7 @@ export default function BillingSettings() {
           <Link
             key={href}
             href={href}
-            className={`rounded border border-slate-300 px-3 py-2 text-xs ${path === href ? "border border-slate-300-[#672f35] bg-[#f5eaea] text-[#672f35]" : "bg-white text-slate-600"}`}
+            className={`rounded border border-slate-300 px-3 py-2 text-xs ${path === href ? "border border-slate-300-[#9D174D] bg-[#f5eaea] text-[#9D174D]" : "bg-white text-slate-600"}`}
           >
             {label}
           </Link>
@@ -374,7 +374,7 @@ export default function BillingSettings() {
               </thead>
               <tbody>
                 {rates.map((r) => (
-                  <tr className="border border-slate-300-t" key={r.id}>
+                  <tr className="border-t border-slate-300" key={r.id}>
                     <td className="p-2">{r.code}</td>
                     <td>{r.name}</td>
                     <td>{r.cgstPercent}</td>
@@ -479,7 +479,7 @@ export default function BillingSettings() {
             () => void save(() => api.post("/api/admin/settings/hsn", hsnForm)),
           )}
           {hsn.map((h) => (
-            <p key={h.id} className="border border-slate-300-t pt-2 text-sm">
+            <p key={h.id} className="border-t border-slate-300 pt-2 text-sm">
               {h.code} · {h.description} ·{" "}
               {h.gstRate?.code ?? "Tax not configured"} ·{" "}
               {h.isActive ? "Active" : "Inactive"}
@@ -513,7 +513,7 @@ export default function BillingSettings() {
               ),
           )}
           {years.map((y) => (
-            <p key={y.id} className="border border-slate-300-t pt-2 text-sm">
+            <p key={y.id} className="border-t border-slate-300 pt-2 text-sm">
               {y.name} · {new Date(y.startDate).toLocaleDateString()} to{" "}
               {new Date(y.endDate).toLocaleDateString()} ·{" "}
               {y.isActive ? "Active" : "Inactive"}{" "}
@@ -592,7 +592,7 @@ export default function BillingSettings() {
               ),
           )}
           {numbering.map((n) => (
-            <p key={n.id} className="border border-slate-300-t pt-2 text-sm">
+            <p key={n.id} className="border-t border-slate-300 pt-2 text-sm">
               {n.financialYear.name} · {n.documentType} · {n.prefix} · sequence{" "}
               {n.currentSequence}/{n.startingSequence} ·{" "}
               {n.isActive ? "Active" : "Inactive"}
@@ -656,7 +656,7 @@ export default function BillingSettings() {
               void save(() => api.post("/api/admin/settings/charges", charge)),
           )}
           {charges.map((c) => (
-            <p key={c.id} className="border border-slate-300-t pt-2 text-sm">
+            <p key={c.id} className="border-t border-slate-300 pt-2 text-sm">
               {c.code} · {c.label} ·{" "}
               {c.isTaxable
                 ? `Taxable${c.taxInclusive ? " (inclusive)" : " (exclusive)"}`
@@ -767,7 +767,7 @@ function ProductTaxMappings() {
           </select>
           <button
             onClick={() => void save(p)}
-            className="rounded border border-slate-300 px-3 py-2"
+            className="rounded bg-[#9D174D] text-white px-3 py-2"
           >
             Save
           </button>
@@ -848,7 +848,7 @@ function TaxPreview() {
         </select>
         <button
           onClick={() => void run()}
-          className="rounded bg-[#672f35] px-3 py-2 text-sm text-white"
+          className="rounded bg-[#9D174D] px-3 py-2 text-sm text-white"
         >
           Calculate preview
         </button>

@@ -253,7 +253,7 @@ export default function InventoryPage() {
           </button>
           <button
             onClick={() => start("adjustment")}
-            className="inline-flex items-center gap-2 rounded-md bg-[#672f35] px-3 py-2.5 text-sm text-white"
+            className="inline-flex items-center gap-2 rounded-md bg-[#9D174D] px-3 py-2.5 text-sm text-white"
           >
             <SlidersHorizontal size={16} /> Adjustment
           </button>
@@ -573,7 +573,7 @@ export default function InventoryPage() {
               </button>
               <button
                 disabled={busy}
-                className="rounded-md bg-[#672f35] px-4 py-2 text-sm text-white"
+                className="rounded-md bg-[#9D174D] px-4 py-2 text-sm text-white"
               >
                 {busy ? "Recording…" : "Record movement"}
               </button>
@@ -731,7 +731,7 @@ export default function InventoryPage() {
               </button>
               <button
                 disabled={busy}
-                className="rounded-md bg-[#672f35] px-4 py-2 text-sm text-white"
+                className="rounded-md bg-[#9D174D] px-4 py-2 text-sm text-white"
               >
                 {busy ? "Transferring…" : "Review and transfer"}
               </button>

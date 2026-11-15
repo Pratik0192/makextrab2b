@@ -84,7 +84,7 @@ function Navigation({ onNavigate, role }: { onNavigate?: () => void; role: Authe
         const Icon = item.icon;
         const active = activeHref === item.href;
         return <li key={item.href}><Link href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
-          className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-[13px] transition ${active ? "bg-[#f5eaea] font-medium text-[#672f35]" : "text-slate-600 hover:bg-slate-50 hover:text-[#672f35]"}`}>
+          className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-[13px] transition ${active ? "bg-[#f5eaea] font-medium text-[#9D174D]" : "text-slate-600 hover:bg-slate-50 hover:text-[#9D174D]"}`}>
           <Icon size={17} strokeWidth={1.8} /><span>{item.label}</span>{active && <ChevronRight className="ml-auto" size={14} />}
         </Link></li>;
       })}</ul>
@@ -121,7 +121,7 @@ export default function AdminShell({ user, children }: { user: AuthenticatedUser
     <div className="min-h-0 flex-1 overflow-y-auto pt-5"><Navigation role={user.role} onNavigate={() => setMobileOpen(false)} /></div>
     <div className="border-t border-slate-100 p-4">
       <div className="mb-3 flex items-center gap-3 px-2">
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#f5eaea] text-sm font-semibold text-[#672f35]">{user.firstName.slice(0, 1).toUpperCase()}</div>
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#f5eaea] text-sm font-semibold text-[#9D174D]">{user.firstName.slice(0, 1).toUpperCase()}</div>
         <div className="min-w-0"><p className="truncate text-xs font-medium text-slate-800">{user.firstName} {user.lastName}</p><p className="truncate text-[10px] text-slate-500">{user.email}</p></div>
       </div>
       <button type="button" onClick={logout} disabled={loggingOut} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50">
@@ -143,9 +143,9 @@ export default function AdminShell({ user, children }: { user: AuthenticatedUser
           <div><p className="text-[10px] text-slate-400">Nextra Wholesale <span className="px-1">/</span> Administration</p><h1 className="truncate text-[15px] font-semibold text-slate-800">{pageTitle}</h1></div>
         </div>
         <div className="ml-3 flex shrink-0 items-center gap-3">
-      <span className="hidden rounded-full border border-[#ead8d9] bg-[#fbf4f4] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#672f35] sm:inline-flex">{user.role === "SUPER_ADMIN" ? "Super Admin" : "Sales Executive"}</span>
+      <span className="hidden rounded-full border border-[#ead8d9] bg-[#fbf4f4] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#9D174D] sm:inline-flex">{user.role === "SUPER_ADMIN" ? "Super Admin" : "Sales Executive"}</span>
           <div className="hidden text-right md:block"><p className="text-xs font-medium text-slate-800">{user.firstName} {user.lastName}</p><p className="text-[10px] text-slate-500">{user.email}</p></div>
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-[#f5eaea] text-sm font-semibold text-[#672f35] sm:hidden">{user.firstName.slice(0, 1).toUpperCase()}</div>
+          <div className="grid h-9 w-9 place-items-center rounded-full bg-[#f5eaea] text-sm font-semibold text-[#9D174D] sm:hidden">{user.firstName.slice(0, 1).toUpperCase()}</div>
           <button type="button" onClick={logout} disabled={loggingOut} className="hidden items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-[11px] font-medium text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 sm:flex disabled:opacity-50"><LogOut size={14}/>{loggingOut ? "Signing out…" : "Log out"}</button>
         </div>
       </header>

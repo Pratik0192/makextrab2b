@@ -120,7 +120,7 @@ export default function PublicProductBrowser() {
             ))}
           </select>
           <label className="flex items-center gap-2 px-1 text-xs text-[#644d4a]">
-            <input type="checkbox" checked={newArrival} onChange={(event) => { setNewArrival(event.target.checked); setPage(1); }} className="accent-[#672f35]" />
+            <input type="checkbox" checked={newArrival} onChange={(event) => { setNewArrival(event.target.checked); setPage(1); }} className="accent-[#9D174D]" />
             New arrivals
           </label>
           <select

@@ -327,7 +327,7 @@ export default function LostLeadsWorkspace({
                   new Date(cycle.reactivationDueAt) < new Date();
                 return (
                   <tr key={lead.id} className="align-top">
-                    <td className="px-3 py-3 font-semibold text-[#672f35]">
+                    <td className="px-3 py-3 font-semibold text-[#9D174D]">
                       {lead.referenceNumber}
                     </td>
                     <td className="px-3 py-3">
@@ -380,7 +380,7 @@ export default function LostLeadsWorkspace({
                     </td>
                     <td className="px-3 py-3">
                       <Link
-                        className="font-medium text-[#672f35] underline"
+                        className="font-medium text-[#9D174D] underline"
                         href={`${detailBase}/${lead.id}`}
                       >
                         Open

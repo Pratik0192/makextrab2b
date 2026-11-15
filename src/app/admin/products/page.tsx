@@ -960,7 +960,7 @@ export default function ProductsPage() {
                     type="checkbox"
                     checked={Boolean(form[key])}
                     onChange={(event) => updateField(key, event.target.checked)}
-                    className="accent-[#672f35]"
+                    className="accent-[#9D174D]"
                   />
                   {label}
                 </label>

@@ -133,10 +133,10 @@ export default function SalesOrders() {
                     .includes(q.toLowerCase()),
                 )
                 .map((i) => (
-                  <tr key={i.id} className="border border-slate-300-b last:border border-slate-300-0">
+                  <tr key={i.id} className="border-b border-slate-300 last:border border-slate-300-0">
                     <td className="p-3">
                       <Link
-                        className="font-medium text-[#672f35] underline"
+                        className="font-medium text-[#9D174D] underline"
                         href={`${base}/orders/${i.id}`}
                       >
                         {i.orderNumber}
@@ -201,7 +201,7 @@ export default function SalesOrders() {
             <button
               disabled={busy}
               onClick={() => void action("SUBMIT")}
-              className="rounded bg-[#672f35] px-3 py-2 text-sm text-white"
+              className="rounded bg-[#9D174D] px-3 py-2 text-sm text-white"
             >
               Submit for approval
             </button>
@@ -354,7 +354,7 @@ export default function SalesOrders() {
               minimumFractionDigits: 2,
             })}
           </p>
-          <p className="mt-2 border border-slate-300-t pt-2 text-lg font-semibold">
+          <p className="mt-2 border-t border-slate-300 pt-2 text-lg font-semibold">
             Total ₹
             {Number(record.totalAmount).toLocaleString("en-IN", {
               minimumFractionDigits: 2,
@@ -423,7 +423,7 @@ export default function SalesOrders() {
         )}
       <div className="overflow-x-auto rounded-lg border border-slate-300 bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="border border-slate-300-b bg-slate-50 text-xs">
+          <thead className="border-b border-slate-300 bg-slate-50 text-xs">
             <tr>
               {[
                 "Product",
@@ -441,7 +441,7 @@ export default function SalesOrders() {
           </thead>
           <tbody>
             {record.items.map((i: any) => (
-              <tr key={i.id} className="border border-slate-300-b">
+              <tr key={i.id} className="border-b border-slate-300">
                 <td className="p-3">{i.productNameSnapshot}</td>
                 <td className="p-3">{i.skuSnapshot}</td>
                 <td className="p-3">{i.quantity}</td>
@@ -472,7 +472,7 @@ export default function SalesOrders() {
         <h3 className="font-semibold">Reservation history</h3>
         {record.reservations.length ? (
           record.reservations.map((r: any) => (
-            <p key={r.id} className="mt-2 border border-slate-300-b pb-2 text-sm">
+            <p key={r.id} className="mt-2 border-b border-slate-300 pb-2 text-sm">
               {r.product.name} · {r.warehouse.name} · {r.status} · qty{" "}
               {r.quantity}
               {r.shortageQuantity ? ` · shortage ${r.shortageQuantity}` : ""}

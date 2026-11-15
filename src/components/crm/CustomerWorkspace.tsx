@@ -235,7 +235,7 @@ export default function CustomerWorkspace() {
                 <tr key={c.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">
                     <Link
-                      className="font-semibold text-[#672f35]"
+                      className="font-semibold text-[#9D174D]"
                       href={`${base}/customers/${c.id}`}
                     >
                       {c.customerCode}

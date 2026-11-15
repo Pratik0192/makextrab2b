@@ -164,7 +164,7 @@ export default function CatalogueTaxonomyManager({ kind }: Props) {
         </div>
         <button
           onClick={() => start()}
-          className="inline-flex items-center gap-2 rounded-md bg-[#672f35] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#51252b]"
+          className="inline-flex items-center gap-2 rounded-md bg-[#9D174D] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#51252b]"
         >
           <Plus size={16} /> Add {singular}
         </button>
@@ -414,7 +414,7 @@ export default function CatalogueTaxonomyManager({ kind }: Props) {
               </button>
               <button
                 disabled={busy}
-                className="rounded-md bg-[#672f35] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="rounded-md bg-[#9D174D] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
               >
                 {busy ? "Saving…" : "Save"}
               </button>

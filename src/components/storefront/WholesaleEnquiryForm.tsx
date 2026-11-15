@@ -238,9 +238,9 @@ export default function WholesaleEnquiryForm({ trigger, initialProduct }: { trig
         </div></section>
 
         <section className="space-y-3 border-t border-[#e8ded2] pt-4">
-          <label data-field="consentToContact" className="flex items-start gap-2 text-xs leading-5 text-[#634849]"><input type="checkbox" aria-invalid={Boolean(errors.consentToContact)} checked={values.consentToContact && values.consentToPrivacyPolicy} onChange={(event) => { update("consentToContact", event.target.checked); update("consentToPrivacyPolicy", event.target.checked); }} className="mt-1 accent-[#672f35]" /><span>I agree to the Privacy Policy and consent to Nextra Wholesale contacting me regarding this enquiry. *</span></label>
+          <label data-field="consentToContact" className="flex items-start gap-2 text-xs leading-5 text-[#634849]"><input type="checkbox" aria-invalid={Boolean(errors.consentToContact)} checked={values.consentToContact && values.consentToPrivacyPolicy} onChange={(event) => { update("consentToContact", event.target.checked); update("consentToPrivacyPolicy", event.target.checked); }} className="mt-1 accent-[#9D174D]" /><span>I agree to the Privacy Policy and consent to Nextra Wholesale contacting me regarding this enquiry. *</span></label>
           {errors.consentToContact && <p role="alert" className="text-[11px] text-rose-700">{errors.consentToContact}</p>}
-          <label className="flex items-start gap-2 text-xs leading-5 text-[#634849]"><input type="checkbox" checked={values.informationAccuracyConfirmed} onChange={(event) => update("informationAccuracyConfirmed", event.target.checked)} className="mt-1 accent-[#672f35]" /><span>I confirm that the information provided is accurate. *</span></label>
+          <label className="flex items-start gap-2 text-xs leading-5 text-[#634849]"><input type="checkbox" checked={values.informationAccuracyConfirmed} onChange={(event) => update("informationAccuracyConfirmed", event.target.checked)} className="mt-1 accent-[#9D174D]" /><span>I confirm that the information provided is accurate. *</span></label>
           {errors.informationAccuracyConfirmed && <p role="alert" className="text-[11px] text-rose-700">{errors.informationAccuracyConfirmed}</p>}
         </section>
 

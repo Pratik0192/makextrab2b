@@ -283,7 +283,7 @@ export default function AdminLeadDetailPage({
       <div className="mx-auto max-w-3xl">
         <Link
           href={basePath}
-          className="inline-flex items-center gap-2 text-xs text-[#672f35]"
+          className="inline-flex items-center gap-2 text-xs text-[#9D174D]"
         >
           <ArrowLeft size={14} /> Back to leads
         </Link>
@@ -331,7 +331,7 @@ export default function AdminLeadDetailPage({
       <div>
         <Link
           href={basePath}
-          className="inline-flex items-center gap-2 text-xs font-medium text-[#672f35] hover:underline"
+          className="inline-flex items-center gap-2 text-xs font-medium text-[#9D174D] hover:underline"
         >
           <ArrowLeft size={14} /> Back to leads
         </Link>
@@ -365,7 +365,7 @@ export default function AdminLeadDetailPage({
                   });
                   setConversionOpen(true);
                 }}
-                className="rounded-md bg-[#672f35] px-3 py-2 text-xs font-semibold text-white"
+                className="rounded-md bg-[#9D174D] px-3 py-2 text-xs font-semibold text-white"
               >
                 Convert to Customer
               </button>
@@ -455,7 +455,7 @@ export default function AdminLeadDetailPage({
               <button
                 disabled={conversionBusy}
                 onClick={() => void convertLead()}
-                className="rounded bg-[#672f35] px-4 py-2 text-sm text-white disabled:opacity-50"
+                className="rounded bg-[#9D174D] px-4 py-2 text-sm text-white disabled:opacity-50"
               >
                 {conversionBusy ? "Converting…" : "Confirm conversion"}
               </button>
@@ -477,7 +477,7 @@ export default function AdminLeadDetailPage({
                   href={lead.website}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[#672f35] underline"
+                  className="text-[#9D174D] underline"
                 >
                   {lead.website}
                 </a>
@@ -492,7 +492,7 @@ export default function AdminLeadDetailPage({
                   href={lead.socialMediaUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[#672f35] underline"
+                  className="text-[#9D174D] underline"
                 >
                   {lead.socialMediaUrl}
                 </a>
@@ -577,7 +577,7 @@ export default function AdminLeadDetailPage({
           <Value
             label="Mobile"
             value={
-              <a href={`tel:${lead.mobile}`} className="text-[#672f35]">
+              <a href={`tel:${lead.mobile}`} className="text-[#9D174D]">
                 {lead.mobile}
               </a>
             }
@@ -588,7 +588,7 @@ export default function AdminLeadDetailPage({
               lead.whatsappNumber ? (
                 <a
                   href={`tel:${lead.whatsappNumber}`}
-                  className="text-[#672f35]"
+                  className="text-[#9D174D]"
                 >
                   {lead.whatsappNumber}
                 </a>
@@ -598,7 +598,7 @@ export default function AdminLeadDetailPage({
           <Value
             label="Email"
             value={
-              <a href={`mailto:${lead.email}`} className="text-[#672f35]">
+              <a href={`mailto:${lead.email}`} className="text-[#9D174D]">
                 {lead.email}
               </a>
             }
@@ -705,7 +705,7 @@ export default function AdminLeadDetailPage({
               <article key={match.id} className="rounded border p-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-[#672f35]">
+                    <p className="font-semibold text-[#9D174D]">
                       <Link
                         href={`${basePath}/${match.candidate.id}`}
                         className="underline"
@@ -996,7 +996,7 @@ export default function AdminLeadDetailPage({
                   the surviving lead.
                 </p>
                 <details className="mt-2">
-                  <summary className="cursor-pointer text-[#672f35]">
+                  <summary className="cursor-pointer text-[#9D174D]">
                     View preserved original values
                   </summary>
                   <pre className="mt-2 max-h-64 overflow-auto rounded bg-slate-50 p-3 text-[10px]">
@@ -1183,7 +1183,7 @@ export default function AdminLeadDetailPage({
                   )}
                 </div>
                 <a
-                  className="shrink-0 rounded border px-3 py-2 text-[#672f35]"
+                  className="shrink-0 rounded border px-3 py-2 text-[#9D174D]"
                   href={`/api/admin/leads/${lead.id}/documents/${doc.id}`}
                 >
                   View / Download

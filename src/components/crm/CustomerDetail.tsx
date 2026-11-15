@@ -59,7 +59,7 @@ export default function CustomerDetail() {
         <div className="flex gap-2">
           <Link
             href={`${base}/quotations/create?customerId=${record.id}`}
-            className="rounded bg-[#672f35] px-4 py-2 text-sm text-white"
+            className="h-9 inline-flex items-center rounded bg-[#9D174D] px-4 py-2 text-sm text-white hover:bg-[#BE185D] transition"
           >
             Create quotation
           </Link>
@@ -67,7 +67,7 @@ export default function CustomerDetail() {
             <>
               <Link
                 href={`/admin/customers/${record.id}/edit`}
-                className="rounded border border-slate-300 px-3 py-2 text-sm"
+                className="h-9 inline-flex items-center rounded border border-slate-300 px-3 py-2 text-sm"
               >
                 Edit customer
               </Link>
@@ -76,7 +76,7 @@ export default function CustomerDetail() {
                 aria-label="Change customer status"
                 value={record.status}
                 onChange={(e) => void updateStatus(e.target.value)}
-                className="rounded border border-slate-300 bg-white px-3"
+                className="h-9 inline-flex items-center rounded border border-slate-300 bg-white px-3 text-sm"
               >
                 <option>ACTIVE</option>
                 <option>INACTIVE</option>
@@ -122,7 +122,7 @@ export default function CustomerDetail() {
                 {new Date(lead.createdAt).toLocaleDateString()}
               </p>
               <Link
-                className="mt-2 inline-block text-sm text-[#672f35] underline"
+                className="mt-2 inline-block text-sm text-[#9D174D] underline"
                 href={`/admin/leads/${lead.id}`}
               >
                 Open lead details

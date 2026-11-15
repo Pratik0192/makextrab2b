@@ -513,7 +513,7 @@ export default function AdminLeadsPage({
         <summary className="cursor-pointer text-sm font-medium text-slate-700">
           More filters and sorting{" "}
           {activeFilterCount > 0 && (
-            <span className="ml-2 rounded-full bg-[#f5eeee] px-2 py-1 text-[10px] text-[#672f35]">
+            <span className="ml-2 rounded-full bg-[#f5eeee] px-2 py-1 text-[10px] text-[#9D174D]">
               {activeFilterCount} active
             </span>
           )}
@@ -927,7 +927,7 @@ export default function AdminLeadsPage({
                         <button
                           type="button"
                           onClick={clearFilters}
-                          className="mt-3 text-xs font-medium text-[#672f35] underline"
+                          className="mt-3 text-xs font-medium text-[#9D174D] underline"
                         >
                           Clear filters
                         </button>
@@ -967,7 +967,7 @@ export default function AdminLeadsPage({
                             />
                           </td>
                         )}
-                        <td className="whitespace-nowrap px-3 py-3 font-semibold text-[#672f35]">
+                        <td className="whitespace-nowrap px-3 py-3 font-semibold text-[#9D174D]">
                           {lead.referenceNumber}
                         </td>
                         <td className="max-w-48 px-3 py-3">
@@ -1131,7 +1131,7 @@ export default function AdminLeadsPage({
                         <td className="px-3 py-3">
                           <Link
                             href={`${basePath}/${lead.id}`}
-                            className="inline-flex items-center gap-1 font-medium text-[#672f35] hover:underline"
+                            className="inline-flex items-center gap-1 font-medium text-[#9D174D] hover:underline"
                           >
                             View <ArrowRight size={13} />
                           </Link>

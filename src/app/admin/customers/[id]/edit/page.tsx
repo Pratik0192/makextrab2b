@@ -137,7 +137,7 @@ export default function EditCustomerPage() {
         </button>
         <button
           disabled={busy}
-          className="rounded bg-[#672f35] px-4 py-2 text-white"
+          className="rounded bg-[#9D174D] px-4 py-2 text-white"
         >
           {busy ? "Saving…" : "Save changes"}
         </button>

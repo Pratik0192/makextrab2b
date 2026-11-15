@@ -123,7 +123,7 @@ export default function WarehousePage() {
         </div>
         <button
           onClick={() => start()}
-          className="inline-flex items-center gap-2 rounded-md bg-[#672f35] px-4 py-2.5 text-sm font-medium text-white"
+          className="inline-flex items-center gap-2 rounded-md bg-[#9D174D] px-4 py-2.5 text-sm font-medium text-white"
         >
           <Plus size={16} /> Add warehouse
         </button>
@@ -270,7 +270,7 @@ export default function WarehousePage() {
                   onChange={(e) =>
                     setForm({ ...form, isActive: e.target.checked })
                   }
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border border-slate-300-[#672f35] focus:outline-none focus:ring-1 focus:ring-[#672f35]"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border border-slate-300-[#9D174D] focus:outline-none focus:ring-1 focus:ring-[#9D174D]"
                 />{" "}
                 Active
               </label>
@@ -286,7 +286,7 @@ export default function WarehousePage() {
               </button>
               <button
                 disabled={busy}
-                className="rounded-md bg-[#672f35] px-4 py-2 text-sm text-white"
+                className="rounded-md bg-[#9D174D] px-4 py-2 text-sm text-white"
               >
                 {busy ? "Saving…" : "Save warehouse"}
               </button>
