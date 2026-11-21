@@ -1,6 +1,7 @@
 import "server-only";
 import { Readable } from "node:stream";
 import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
+import { InvoicePdfStorageError, normalizeInvoicePdfPublicId } from "@/lib/invoice-pdf-storage";
 
 const CLOUDINARY_FOLDER = "nextra/products";
 const TAXONOMY_FOLDERS = { categories: "nextra/categories", collections: "nextra/collections" } as const;
@@ -127,18 +128,30 @@ const INVOICE_DOCUMENT_FOLDER = "nextra/invoices";
 export async function uploadPrivateInvoicePdf(bytes: Buffer, invoiceId: string): Promise<string> {
   if (!/^[a-zA-Z0-9_-]{1,100}$/.test(invoiceId) || bytes.length < 100 || bytes.subarray(0, 5).toString() !== "%PDF-") throw new Error("Invalid invoice PDF.");
   configureCloudinary();
-  const publicId = `${INVOICE_DOCUMENT_FOLDER}/${invoiceId}/${crypto.randomUUID()}`;
-  await new Promise<void>((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream({ public_id: publicId, resource_type: "raw", type: "authenticated", overwrite: false, format: "pdf" }, (error, result) => error || !result ? reject(error ?? new Error("Invoice PDF upload failed.")) : resolve());
-    Readable.from(bytes).pipe(stream);
-  });
-  return publicId;
+  const publicId = `${INVOICE_DOCUMENT_FOLDER}/${invoiceId}/${crypto.randomUUID()}.pdf`;
+  let uploaded: UploadApiResponse;
+  try {
+    uploaded = await new Promise<UploadApiResponse>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { public_id: publicId, resource_type: "raw", type: "authenticated", overwrite: false },
+        (error, result) => error || !result ? reject(error ?? new Error("Cloudinary returned no invoice PDF upload result.")) : resolve(result),
+      );
+      Readable.from(bytes).pipe(stream);
+    });
+  } catch (error) {
+    throw new InvoicePdfStorageError("Invoice PDF upload to Cloudinary failed.", { cause: error });
+  }
+  try {
+    return normalizeInvoicePdfPublicId(uploaded.public_id);
+  } catch (error) {
+    throw new InvoicePdfStorageError("Cloudinary returned an invalid invoice PDF identifier.", { cause: error });
+  }
 }
 
 export async function getPrivateInvoicePdfUrl(providerFileId: string, attachment = false): Promise<string> {
-  if (!providerFileId.startsWith(`${INVOICE_DOCUMENT_FOLDER}/`) || providerFileId.includes("..")) throw new Error("Invalid invoice document identifier.");
+  const publicId = normalizeInvoicePdfPublicId(providerFileId);
   configureCloudinary();
-  return cloudinary.utils.private_download_url(providerFileId, "pdf", { resource_type: "raw", type: "authenticated", expires_at: Math.floor(Date.now() / 1000) + 60, attachment });
+  return cloudinary.utils.private_download_url(publicId, "pdf", { resource_type: "raw", type: "authenticated", expires_at: Math.floor(Date.now() / 1000) + 60, attachment });
 }
 
 async function deleteImageAsset(publicId: string, folder: string): Promise<void> {

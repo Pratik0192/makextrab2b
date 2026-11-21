@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "test:invoice-pdf": "node --experimental-strip-types --test src/lib/invoice-pdf-storage.test.mjs",
     "start": "next start",
     "startPm2": "pm2 start pm2.config.cjs --only Makextra --env production",
     "stopPm2": "pm2 stop pm2.config.cjs --only Makextra",

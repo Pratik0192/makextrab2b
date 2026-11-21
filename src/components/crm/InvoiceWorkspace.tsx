@@ -868,6 +868,13 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
               >
                 View
               </a>
+              {" · "}
+              <a
+                className="underline"
+                href={`/api/invoices/${invoice.id}/pdf?documentId=${doc.id}`}
+              >
+                Download
+              </a>
             </p>
           ))}
           {isAdmin && (

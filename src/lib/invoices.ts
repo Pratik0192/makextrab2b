@@ -3,6 +3,7 @@ import { Prisma, type InvoicePaymentStatus } from "@/generated/prisma";
 import { calculateDispatchInvoice, type SupplyTreatment } from "@/services/tax-calculation.service";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
 import { uploadPrivateInvoicePdf } from "@/lib/cloudinary";
+import { InvoicePdfGenerationError } from "@/lib/invoice-pdf-storage";
 import { prisma } from "@/lib/prisma";
 
 const D = Prisma.Decimal;
@@ -107,7 +108,13 @@ export async function regenerateInvoicePdf(invoiceId: string, reason: string, ac
     await tx.$queryRaw`SELECT "id" FROM "Invoice" WHERE "id" = ${invoiceId} FOR UPDATE`;
     const invoice = await tx.invoice.findUnique({ where: { id: invoiceId }, include: { items: true, customer: true, salesOrder: true, dispatch: true, financialYear: true } });
     if (!invoice || !["ISSUED", "CREDIT_NOTED"].includes(invoice.status) || !invoice.invoiceNumber || !invoice.invoiceDate) throw new Error("Only an issued invoice can have its PDF regenerated.");
-    const pdf = await renderInvoicePdf(invoice); const version = invoice.pdfVersion + 1; const providerFileId = await uploadPrivateInvoicePdf(pdf, invoiceId); const generatedAt = new Date();
+    let pdf: Buffer;
+    try {
+      pdf = await renderInvoicePdf(invoice);
+    } catch (error) {
+      throw new InvoicePdfGenerationError("Invoice PDF generation failed.", { cause: error });
+    }
+    const version = invoice.pdfVersion + 1; const providerFileId = await uploadPrivateInvoicePdf(pdf, invoiceId); const generatedAt = new Date();
     const document = await tx.invoiceDocument.create({ data: { invoiceId, version, providerFileId, sizeBytes: pdf.length, generatedById: actorId, generatedAt, reason: reason.trim().slice(0, 1000) } });
     await tx.invoice.update({ where: { id: invoiceId }, data: { pdfProviderFileId: providerFileId, pdfGeneratedAt: generatedAt, pdfVersion: version } });
     await tx.invoiceEvent.create({ data: { invoiceId, actorId, action: "PDF_REGENERATED", details: snap({ version, previousVersion: invoice.pdfVersion, providerFileId, reason: reason.trim() }) } });
