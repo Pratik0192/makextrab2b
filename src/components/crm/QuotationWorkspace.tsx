@@ -147,7 +147,7 @@ export function QuotationList() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-slate-300">
             {err ? (
               <tr>
                 <td colSpan={8} className="p-8 text-center text-rose-700">

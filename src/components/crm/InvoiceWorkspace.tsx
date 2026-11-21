@@ -661,7 +661,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
                 onChange={(e) =>
                   setPayment({ ...payment, amount: e.target.value })
                 }
-                className="rounded border border-slate-300 p-2"
+                className="rounded border border-slate-300 p-2 bg-white"
               />
               <input
                 aria-label="Payment date"
@@ -670,14 +670,14 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
                 onChange={(e) =>
                   setPayment({ ...payment, paymentDate: e.target.value })
                 }
-                className="rounded border border-slate-300 p-2"
+                className="rounded border border-slate-300 p-2 bg-white"
               />
               <select
                 value={payment.mode}
                 onChange={(e) =>
                   setPayment({ ...payment, mode: e.target.value })
                 }
-                className="rounded border border-slate-300 p-2"
+                className="rounded border border-slate-300 p-2 bg-white"
               >
                 {["CASH", "UPI", "BANK_TRANSFER", "CARD", "OTHER"].map((x) => (
                   <option key={x}>{x}</option>
@@ -692,7 +692,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
                     transactionReference: e.target.value,
                   })
                 }
-                className="rounded border border-slate-300 p-2"
+                className="rounded border border-slate-300 p-2 bg-white"
               />
               <input
                 placeholder="Bank / UPI details (optional)"
@@ -700,7 +700,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
                 onChange={(e) =>
                   setPayment({ ...payment, bankDetails: e.target.value })
                 }
-                className="rounded border border-slate-300 p-2"
+                className="rounded border border-slate-300 p-2 bg-white"
               />
               <textarea
                 placeholder="Internal remarks"
@@ -708,7 +708,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
                 onChange={(e) =>
                   setPayment({ ...payment, remarks: e.target.value })
                 }
-                className="rounded border border-slate-300 p-2"
+                className="rounded border border-slate-300 p-2 bg-white"
               />
               <button
                 disabled={busy}
@@ -748,7 +748,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
             placeholder="Reason"
             value={creditReason}
             onChange={(e) => setCreditReason(e.target.value)}
-            className="mt-2 w-full max-w-lg rounded border border-slate-300 p-2"
+            className="mt-2 w-full max-w-lg rounded border border-slate-300 p-2 bg-white"
           />
           <div className="mt-2 space-y-2">
             {invoice.items.map((x: Row) => (
@@ -768,7 +768,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
                       [x.id]: Number(e.target.value),
                     })
                   }
-                  className="w-28 rounded border border-slate-300 p-2"
+                  className="w-28 rounded border border-slate-300 p-2 bg-white"
                 />
               </label>
             ))}
@@ -800,7 +800,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
         <h3 className="font-semibold">Payment history</h3>
         {invoice.payments?.length ? (
           invoice.payments.map((p: Row) => (
-            <div key={p.id} className="mt-3 border border-slate-300-t pt-3 text-sm">
+            <div key={p.id} className="mt-3 border-t border-slate-300 pt-3 text-sm">
               <p>
                 {new Date(p.paymentDate).toLocaleDateString()} ·{" "}
                 {money(p.amount)} · {p.mode} · {p.status} ·{" "}

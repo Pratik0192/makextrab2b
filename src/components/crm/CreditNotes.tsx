@@ -28,7 +28,7 @@ export function CreditNoteWorkspace({ isAdmin }: { isAdmin: boolean }) {
         </p>
       </header>
       <input
-        className="rounded border border-slate-300 bg-white p-2"
+        className="rounded border border-slate-300 bg-white p-2 w-[50%]"
         placeholder="Search credit note or invoice"
         value={q}
         onChange={(e) => setQ(e.target.value)}
@@ -59,7 +59,7 @@ export function CreditNoteWorkspace({ isAdmin }: { isAdmin: boolean }) {
           </thead>
           <tbody>
             {items.map((x) => (
-              <tr key={x.id} className="border border-slate-300-t">
+              <tr key={x.id} className="border-t border-slate-300">
                 <td className="p-3">
                   <Link
                     className="underline"
@@ -192,7 +192,7 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
             disabled={!isAdmin || !isDraft}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="mt-1 block w-full rounded border border-slate-300 p-2"
+            className="mt-1 block w-full rounded border border-slate-300 p-2 bg-white"
           />
         </label>
         <label className="block text-sm">
@@ -201,7 +201,7 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
             disabled={!isAdmin || !isDraft}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="mt-1 block w-full rounded border border-slate-300 p-2"
+            className="mt-1 block w-full rounded border border-slate-300 p-2 bg-white"
           />
         </label>
         <p className="text-sm">
@@ -233,7 +233,7 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
           </thead>
           <tbody>
             {item.items.map((x: any) => (
-              <tr key={x.id} className="border border-slate-300-t">
+              <tr key={x.id} className="border-t border-slate-300">
                 <td className="p-3">{x.invoiceItem.productName}</td>
                 <td className="p-3">
                   {isAdmin && isDraft ? (
@@ -248,7 +248,7 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
                           [x.invoiceItemId]: Number(e.target.value),
                         })
                       }
-                      className="w-24 rounded border border-slate-300 p-2"
+                      className="w-24 rounded border border-slate-300 p-2 bg-white"
                     />
                   ) : (
                     x.quantity

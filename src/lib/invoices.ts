@@ -35,14 +35,16 @@ export async function createInvoiceDraft(input: { dispatchId: string; treatment:
   if (dueDate && !Number.isFinite(dueDate.getTime())) throw new Error("Enter a valid due date.");
   const draft = await invoiceDraftData(input.dispatchId, input.treatment, input.charges ?? []);
   const t = draft.calc.totals;
-  const created = await prisma.invoice.create({ data: {
-    customerId: draft.calc.customer.id, salesOrderId: draft.calc.dispatch.salesOrderId, quotationId: draft.calc.dispatch.salesOrder.quotationId, dispatchId: input.dispatchId, createdById: actorId, supplyTreatment: input.treatment,
-    placeOfSupply: input.placeOfSupply.trim().slice(0, 150), stateCode: input.stateCode, reverseCharge: input.reverseCharge === true, companySnapshot: snap(draft.companySnapshot), customerSnapshot: snap(draft.customerSnapshot), shippingSnapshot: snap(draft.shippingSnapshot), chargesSnapshot: snap(draft.calc.charges), dueDate,
-    taxableSubtotal: t.taxableSubtotal, cgstTotal: t.cgstTotal, sgstTotal: t.sgstTotal, igstTotal: t.igstTotal, cessTotal: t.cessTotal,
-    freightTotal: draft.totals.freight, packingTotal: draft.totals.packing, otherChargesTotal: draft.totals.other, discountTotal: t.discountTotal, roundOff: t.roundOff, grandTotal: t.grandTotal, outstandingAmount: t.grandTotal,
-    items: { create: draft.calc.rows.map(row => ({ ...(row as any), taxSnapshot: snap(row.taxSnapshot) })) },
-    events: { create: { actorId, action: "DRAFT_CREATED", details: snap({ dispatchId: input.dispatchId, treatment: input.treatment }) } },
-  }, include: { items: true } });
+  const created = await prisma.invoice.create({
+    data: {
+      customerId: draft.calc.customer.id, salesOrderId: draft.calc.dispatch.salesOrderId, quotationId: draft.calc.dispatch.salesOrder.quotationId, dispatchId: input.dispatchId, createdById: actorId, supplyTreatment: input.treatment,
+      placeOfSupply: input.placeOfSupply.trim().slice(0, 150), stateCode: input.stateCode, reverseCharge: input.reverseCharge === true, companySnapshot: snap(draft.companySnapshot), customerSnapshot: snap(draft.customerSnapshot), shippingSnapshot: snap(draft.shippingSnapshot), chargesSnapshot: snap(draft.calc.charges), dueDate,
+      taxableSubtotal: t.taxableSubtotal, cgstTotal: t.cgstTotal, sgstTotal: t.sgstTotal, igstTotal: t.igstTotal, cessTotal: t.cessTotal,
+      freightTotal: draft.totals.freight, packingTotal: draft.totals.packing, otherChargesTotal: draft.totals.other, discountTotal: t.discountTotal, roundOff: t.roundOff, grandTotal: t.grandTotal, outstandingAmount: t.grandTotal,
+      items: { create: draft.calc.rows.map(row => ({ ...(row as any), taxSnapshot: snap(row.taxSnapshot) })) },
+      events: { create: { actorId, action: "DRAFT_CREATED", details: snap({ dispatchId: input.dispatchId, treatment: input.treatment }) } },
+    }, include: { items: true }
+  });
   return created;
 }
 

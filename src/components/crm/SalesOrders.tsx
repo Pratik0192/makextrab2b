@@ -407,7 +407,7 @@ export default function SalesOrders() {
             {record.dispatches
               .filter((x: any) => x.status === "CONFIRMED")
               .map((d: any) => (
-                <div key={d.id} className="mt-3 border border-slate-300-t pt-3">
+                <div key={d.id} className="mt-3 border-t border-slate-300 pt-3">
                   <p className="text-sm">
                     {d.reference} ·{" "}
                     {d.invoice?.invoiceNumber ??
