@@ -97,33 +97,33 @@ export default function SalesExecutivesPage() {
           onSubmit={create}
           className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
         >
-          <Input
+          <input
             required
             placeholder="First name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="border-none"
+            className="h-10 bg-white rounded-md text-sm text-gray-800 py-1 px-3 border-0 border-b border-gray-300 focus:border-b-0 focus:outline-none focus:shadow-[inset_0_0_0_1.5px_#d13271]"
           />
-          <Input
+          <input
             required
             placeholder="Last name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="border-none"
+            className="h-10 bg-white rounded-md text-sm text-gray-800 py-1 px-3 border-0 border-b border-gray-300 focus:border-b-0 focus:outline-none focus:shadow-[inset_0_0_0_1.5px_#d13271]"
           />
-          <Input
+          <input
             required
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border-none"
+            className="h-10 bg-white rounded-md text-sm text-gray-800 py-1 px-3 border-0 border-b border-gray-300 focus:border-b-0 focus:outline-none focus:shadow-[inset_0_0_0_1.5px_#d13271]"
           />
-          <Input
+          <input
             placeholder="Mobile (optional)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="border-b border-[#9D174D]"
+            className="h-10 bg-white rounded-md text-sm text-gray-800 py-1 px-3 border-0 border-b border-gray-300 focus:border-b-0 focus:outline-none focus:shadow-[inset_0_0_0_1.5px_#d13271]"
           />
           <button className="rounded bg-[#9D174D] px-4 text-sm text-white">
             Create account
