@@ -9,6 +9,8 @@ import api from "@/lib/axios";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/services/service-utils";
 import type { LeadDetail } from "@/types/lead";
+import { usePrompt } from "@/components/common/PromptProvider";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 const labelFor = (value: string) =>
   value
@@ -29,7 +31,7 @@ function DetailSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 sm:p-6">
+    <section className="rounded-lg border border-[#F3DCE7] shadow-[0_5px_18px_rgba(131,24,67,0.20)] bg-white p-5 sm:p-6">
       <h2 className="mb-4 border-b border-slate-100 pb-3 font-serif text-xl text-[#452d2d]">
         {title}
       </h2>
@@ -58,6 +60,7 @@ export default function AdminLeadDetailPage({
 }) {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const prompt = usePrompt();
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -118,6 +121,7 @@ export default function AdminLeadDetailPage({
   const [reactivationFollowUpAt, setReactivationFollowUpAt] = useState("");
   const [reactivationFollowUpNote, setReactivationFollowUpNote] = useState("");
   const [mergeOtherLead, setMergeOtherLead] = useState<LeadDetail | null>(null);
+  const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
 
   useEffect(() => {
     void api
@@ -187,6 +191,14 @@ export default function AdminLeadDetailPage({
     setDuplicateMatches(matches.data.data.items);
     setRestrictedDuplicates(matches.data.data.restrictedMatches);
   }
+  async function refreshLeadActivity() {
+    try {
+      const latest = await getAdminLead(id);
+      setLead((current) => current ? { ...current, activities: latest.activities } : current);
+    } catch {
+      toast.error("The action succeeded, but the activity timeline could not be refreshed.");
+    }
+  }
   async function beginMerge(matchId: string, candidateId: string) {
     try {
       const other = await getAdminLead(candidateId);
@@ -215,6 +227,11 @@ export default function AdminLeadDetailPage({
         "country",
         "businessAddress",
         "deliveryAddress",
+        "deliveryCity",
+        "deliveryState",
+        "deliveryPincode",
+        "deliveryContactName",
+        "deliveryContactPhone",
         "notes",
         "estimatedTotalQuantity",
         "estimatedOrderValue",
@@ -328,6 +345,7 @@ export default function AdminLeadDetailPage({
   }
   return (
     <div className="mx-auto max-w-7xl space-y-5">
+      <ConfirmDialog open={mergeConfirmOpen} onOpenChange={setMergeConfirmOpen} title="Merge these leads?" description={mergeOtherLead && lead ? `Merge ${mergePrimaryId === id ? mergeOtherLead.referenceNumber : lead.referenceNumber} into ${mergePrimaryId === id ? lead.referenceNumber : mergeOtherLead.referenceNumber}? This cannot be undone.` : "This action cannot be undone."} confirmText="Confirm merge" variant="destructive" onConfirm={async () => { setMergeConfirmOpen(false); await submitMerge(); }} />
       <div>
         <Link
           href={basePath}
@@ -362,6 +380,13 @@ export default function AdminLeadDetailPage({
                     city: lead.city,
                     state: lead.state,
                     pincode: lead.pincode,
+                    businessAddress: lead.businessAddress || "",
+                    deliveryAddress: lead.deliveryAddress || "",
+                    deliveryCity: lead.deliveryCity || "",
+                    deliveryState: lead.deliveryState || "",
+                    deliveryPincode: lead.deliveryPincode || "",
+                    deliveryContactName: lead.deliveryContactName || lead.buyerName,
+                    deliveryContactPhone: lead.deliveryContactPhone || lead.mobile,
                   });
                   setConversionOpen(true);
                 }}
@@ -411,6 +436,13 @@ export default function AdminLeadDetailPage({
                   ["city", "City"],
                   ["state", "State"],
                   ["pincode", "Pincode"],
+                  ["businessAddress", "Billing address"],
+                  ["deliveryAddress", "Shipping address"],
+                  ["deliveryCity", "Shipping city"],
+                  ["deliveryState", "Shipping state"],
+                  ["deliveryPincode", "Shipping postal code"],
+                  ["deliveryContactName", "Shipping contact person"],
+                  ["deliveryContactPhone", "Shipping contact phone"],
                 ] as const
               ).map(([key, label]) => (
                 <label key={key} className="text-xs text-slate-600">
@@ -543,6 +575,13 @@ export default function AdminLeadDetailPage({
                 ],
                 ["email", "Email", lead.email],
                 ["gstin", "GSTIN", lead.gstin ?? ""],
+                ["businessAddress", "Billing address", lead.businessAddress ?? ""],
+                ["deliveryAddress", "Shipping address", lead.deliveryAddress ?? ""],
+                ["deliveryCity", "Shipping city", lead.deliveryCity ?? ""],
+                ["deliveryState", "Shipping state", lead.deliveryState ?? ""],
+                ["deliveryPincode", "Shipping postal code", lead.deliveryPincode ?? ""],
+                ["deliveryContactName", "Shipping contact", lead.deliveryContactName ?? ""],
+                ["deliveryContactPhone", "Shipping phone", lead.deliveryContactPhone ?? ""],
                 ["city", "City", lead.city],
                 ["state", "State", lead.state],
                 ["website", "Website", lead.website ?? ""],
@@ -557,13 +596,14 @@ export default function AdminLeadDetailPage({
                 {label}
                 <input
                   name={name}
+                  required={["businessAddress", "deliveryAddress", "deliveryCity", "deliveryState", "deliveryPincode"].includes(name)}
                   defaultValue={value}
                   className="mt-1 h-9 w-full rounded border px-2 text-xs text-slate-800"
                 />
               </label>
             ))}
             <div className="flex items-end">
-              <button className="rounded bg-[#542d30] px-4 py-2 text-xs text-white">
+              <button className="rounded bg-[#9D174D] px-4 py-2 text-xs text-white">
                 Save and check for duplicates
               </button>
             </div>
@@ -747,8 +787,7 @@ export default function AdminLeadDetailPage({
                     <button
                       type="button"
                       onClick={async () => {
-                        const note =
-                          window.prompt("Optional review note") ?? "";
+                        const note = await prompt({ title: "Confirm duplicate", description: "Optional review note.", multiline: true }) ?? "";
                         try {
                           await api.patch(
                             `/api/admin/leads/${id}/duplicates/${match.id}`,
@@ -760,15 +799,14 @@ export default function AdminLeadDetailPage({
                           toast.error("Could not confirm this duplicate.");
                         }
                       }}
-                      className="rounded bg-[#542d30] px-3 py-2 text-xs text-white"
+                      className="rounded bg-[#9D174D] px-3 py-2 text-xs text-white"
                     >
                       Confirm duplicate
                     </button>
                     <button
                       type="button"
                       onClick={async () => {
-                        const note =
-                          window.prompt("Optional dismissal note") ?? "";
+                        const note = await prompt({ title: "Dismiss duplicate match", description: "Optional dismissal note.", multiline: true }) ?? "";
                         try {
                           await api.patch(
                             `/api/admin/leads/${id}/duplicates/${match.id}`,
@@ -865,6 +903,11 @@ export default function AdminLeadDetailPage({
                         "country",
                         "businessAddress",
                         "deliveryAddress",
+                        "deliveryCity",
+                        "deliveryState",
+                        "deliveryPincode",
+                        "deliveryContactName",
+                        "deliveryContactPhone",
                         "notes",
                         "estimatedTotalQuantity",
                         "estimatedOrderValue",
@@ -960,14 +1003,7 @@ export default function AdminLeadDetailPage({
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        `Merge ${mergePrimaryId === id ? mergeOtherLead.referenceNumber : lead.referenceNumber} into ${mergePrimaryId === id ? lead.referenceNumber : mergeOtherLead.referenceNumber}? This cannot be undone.`,
-                      )
-                    )
-                      void submitMerge();
-                  }}
+                  onClick={() => setMergeConfirmOpen(true)}
                   className="rounded bg-rose-800 px-4 py-2 text-xs text-white"
                 >
                   Confirm merge
@@ -1129,10 +1165,11 @@ export default function AdminLeadDetailPage({
                   await api.patch(`/api/admin/leads/${lead.id}/priority`, {
                     priority: e.target.value,
                   });
-                  setLead({
-                    ...lead,
+                  await refreshLeadActivity();
+                  setLead((current) => current ? {
+                    ...current,
                     priority: e.target.value as LeadDetail["priority"],
-                  });
+                  } : current);
                   toast.success("Priority updated.");
                 } catch {
                   toast.error("Priority update failed.");
@@ -1228,6 +1265,7 @@ export default function AdminLeadDetailPage({
                           remarks: check?.remarks ?? "",
                         },
                       );
+                      await refreshLeadActivity();
                       toast.success("Verification updated.");
                     } catch {
                       toast.error("Verification update failed.");
@@ -1287,6 +1325,7 @@ export default function AdminLeadDetailPage({
                     status,
                     reason,
                   });
+                  await refreshLeadActivity();
                   toast.success("Buyer status updated.");
                 } catch {
                   toast.error(
@@ -1294,7 +1333,7 @@ export default function AdminLeadDetailPage({
                   );
                 }
               }}
-              className="rounded bg-[#542d30] px-3 py-2 text-xs text-white"
+              className="rounded bg-[#9D174D] px-3 py-2 text-xs text-white"
             >
               Save buyer decision
             </button>
@@ -1321,10 +1360,11 @@ export default function AdminLeadDetailPage({
                   await api.patch(`/api/admin/leads/${lead.id}/stage`, {
                     stage: e.target.value,
                   });
-                  setLead({
-                    ...lead,
+                  await refreshLeadActivity();
+                  setLead((current) => current ? {
+                    ...current,
                     stage: e.target.value as LeadDetail["stage"],
-                  });
+                  } : current);
                   toast.success("Lead stage updated.");
                 } catch {
                   toast.error("Stage update failed or is not permitted.");
@@ -1441,7 +1481,7 @@ export default function AdminLeadDetailPage({
                 />
               )}
               <div>
-                <button className="rounded bg-[#542d30] px-4 py-2 text-xs text-white">
+                <button className="rounded bg-[#9D174D] px-4 py-2 text-xs text-white">
                   Confirm reactivation
                 </button>
               </div>
@@ -1621,6 +1661,7 @@ export default function AdminLeadDetailPage({
                 dueAt: followDate,
                 note: followNote,
               });
+              await refreshLeadActivity();
               toast.success("Follow-up scheduled.");
               setFollowNote("");
             } catch {
@@ -1656,13 +1697,14 @@ export default function AdminLeadDetailPage({
               {item.status === "PENDING" && (
                 <button
                   onClick={async () => {
-                    const outcome = window.prompt("Follow-up outcome");
+                    const outcome = await prompt({ title: "Complete follow-up", description: "Enter the outcome of this follow-up.", required: true, multiline: true });
                     if (!outcome) return;
                     try {
                       await api.patch(
                         `/api/admin/leads/${lead.id}/follow-ups/${item.id}`,
                         { status: "COMPLETED", outcome },
                       );
+                      await refreshLeadActivity();
                       toast.success("Follow-up completed.");
                     } catch {
                       toast.error("Could not update follow-up.");
@@ -1689,6 +1731,7 @@ export default function AdminLeadDetailPage({
                 description: activityText,
                 contactMade,
               });
+              await refreshLeadActivity();
               toast.success("Activity recorded.");
               setActivityText("");
             } catch {
@@ -1720,7 +1763,7 @@ export default function AdminLeadDetailPage({
             />{" "}
             Contact made
           </label>
-          <button className="rounded bg-[#542d30] px-3 text-xs text-white">
+          <button className="rounded bg-[#9D174D] px-3 text-xs text-white">
             Add activity
           </button>
         </form>

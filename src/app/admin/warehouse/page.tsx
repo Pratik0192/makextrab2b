@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { apiErrorMessage } from "@/services/service-utils";
 import {
   createWarehouse,
@@ -28,6 +29,7 @@ export default function WarehousePage() {
     [busy, setBusy] = useState(false),
     [open, setOpen] = useState(false),
     [editing, setEditing] = useState<Warehouse | null>(null),
+    [deleteTarget, setDeleteTarget] = useState<Warehouse | null>(null),
     [form, setForm] = useState<CreateWarehouseRequest>(empty);
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,12 +82,6 @@ export default function WarehousePage() {
     }
   };
   const remove = async (item: Warehouse) => {
-    if (
-      !window.confirm(
-        `Delete ${item.name}? Warehouses with stock history cannot be deleted.`,
-      )
-    )
-      return;
     try {
       await deleteWarehouse(item.id);
       toast.success("Warehouse deleted.");
@@ -111,6 +107,7 @@ export default function WarehousePage() {
   );
   return (
     <section className="mx-auto max-w-7xl space-y-5">
+      <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={open => { if (!open) setDeleteTarget(null); }} title="Delete warehouse?" description={deleteTarget ? `Delete ${deleteTarget.name}? Warehouses with stock history cannot be deleted.` : "This action cannot be undone."} confirmText="Delete warehouse" variant="destructive" onConfirm={async () => { if (deleteTarget) await remove(deleteTarget); setDeleteTarget(null); }} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[.18em] text-[#9a7547]">
@@ -204,7 +201,7 @@ export default function WarehousePage() {
                         </button>
                         <button
                           aria-label={`Delete ${item.name}`}
-                          onClick={() => void remove(item)}
+                          onClick={() => setDeleteTarget(item)}
                           className="rounded p-2 text-rose-600 hover:bg-rose-50"
                         >
                           <Trash2 size={16} />

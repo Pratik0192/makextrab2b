@@ -3,21 +3,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import api from "@/lib/axios";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 const money = (n: unknown) =>
   `₹${Number(n ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 export function CreditNoteWorkspace({ isAdmin }: { isAdmin: boolean }) {
   const [items, setItems] = useState<any[]>([]);
   const [q, setQ] = useState("");
-  const [error, setError] = useState("");
   useEffect(() => {
     api
       .get(
         `/api/credit-notes?page=1&pageSize=50${q ? `&q=${encodeURIComponent(q)}` : ""}`,
       )
       .then((r) => setItems(r.data.items))
-      .catch((e) =>
-        setError(e.response?.data?.error || "Unable to load credit notes."),
-      );
+      .catch((e) => toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Unable to load credit notes."));
   }, [q]);
   return (
     <section className="space-y-4">
@@ -33,11 +32,6 @@ export function CreditNoteWorkspace({ isAdmin }: { isAdmin: boolean }) {
         value={q}
         onChange={(e) => setQ(e.target.value)}
       />
-      {error && (
-        <p role="alert" className="text-rose-700">
-          {error}
-        </p>
-      )}
       <div className="overflow-x-auto rounded border border-slate-300 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs">
@@ -98,6 +92,7 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
   const [item, setItem] = useState<any>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [issueConfirmOpen, setIssueConfirmOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -143,8 +138,9 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
           .map(([invoiceItemId, quantity]) => ({ invoiceItemId, quantity })),
       });
       await load();
+      toast.success("Credit note draft saved successfully.");
     } catch (e: any) {
-      setError(e.response?.data?.error || "Draft update failed.");
+      toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Draft update failed.");
     } finally {
       setBusy(false);
     }
@@ -155,8 +151,9 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
     try {
       await saveAndIssue();
       await load();
+      toast.success("Credit note issued successfully.");
     } catch (e: any) {
-      setError(e.response?.data?.error || "Could not issue credit note.");
+      toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Could not issue credit note.");
     } finally {
       setBusy(false);
     }
@@ -165,6 +162,7 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
   const isDraft = item.status === "DRAFT";
   return (
     <section className="mx-auto max-w-5xl space-y-4">
+      <ConfirmDialog open={issueConfirmOpen} onOpenChange={setIssueConfirmOpen} title="Issue credit note?" description="This will issue the credit note against the original invoice and update its credited balance." confirmText="Issue credit note" onConfirm={issue} />
       <Link
         className="text-sm underline"
         href={`${isAdmin ? "/admin" : "/sales"}/credit-notes`}
@@ -180,11 +178,6 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
           {item.invoice.customer.businessName}
         </p>
       </header>
-      {error && (
-        <p role="alert" className="text-rose-700">
-          {error}
-        </p>
-      )}
       <article className="space-y-2 rounded border border-slate-300 bg-white p-4">
         <label className="block text-sm">
           Reason
@@ -279,7 +272,7 @@ export function CreditNoteDetail({ isAdmin }: { isAdmin: boolean }) {
           </button>
           <button
             disabled={busy}
-            onClick={() => void issue()}
+            onClick={() => setIssueConfirmOpen(true)}
             className="rounded bg-emerald-700 px-4 py-2 text-sm text-white"
           >
             Issue Credit Note

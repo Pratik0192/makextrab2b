@@ -11,6 +11,7 @@ import { apiErrorMessage } from "@/services/service-utils";
 import type { Product } from "@/types/product";
 import type { PublicTaxonomyItem } from "@/types/public-catalogue";
 import type { Pagination } from "@/types/api";
+import { toast } from "sonner";
 
 export default function PublicProductBrowser() {
   const [items, setItems] = useState<Product[]>([]),
@@ -28,7 +29,8 @@ export default function PublicProductBrowser() {
       totalPages: 0,
     }),
     [loading, setLoading] = useState(true),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [filtersReady, setFiltersReady] = useState(false);
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -44,7 +46,9 @@ export default function PublicProductBrowser() {
       setItems(result.items);
       setPagination(result.pagination);
     } catch (caught) {
-      setError(apiErrorMessage(caught, "Could not load the catalogue."));
+      const message = apiErrorMessage(caught, "Could not load the catalogue.");
+      setError(message);
+      toast.error("Catalogue could not be loaded", { description: message });
     } finally {
       setLoading(false);
     }
@@ -55,10 +59,13 @@ export default function PublicProductBrowser() {
     if (params.has("collectionId"))
       setCollectionId(params.get("collectionId") ?? "");
     if (params.get("newArrival") === "true") setNewArrival(true);
+    setFiltersReady(true);
   }, []);
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!filtersReady) return;
+    const timer = window.setTimeout(() => void load(), 250);
+    return () => window.clearTimeout(timer);
+  }, [load, filtersReady]);
   useEffect(() => {
     Promise.all([
       listPublicCategories({ pageSize: 100 }),
@@ -200,7 +207,7 @@ export default function PublicProductBrowser() {
           <span>{pagination.total} products</span>
           <div className="flex gap-2">
             <button
-              disabled={page <= 1}
+              disabled={page <= 1 || loading}
               onClick={() => setPage(page - 1)}
               className="rounded border bg-white px-3 py-2 disabled:opacity-40"
             >
@@ -210,7 +217,7 @@ export default function PublicProductBrowser() {
               {page} / {Math.max(1, pagination.totalPages)}
             </span>
             <button
-              disabled={page >= pagination.totalPages}
+              disabled={page >= pagination.totalPages || loading}
               onClick={() => setPage(page + 1)}
               className="rounded border bg-white px-3 py-2 disabled:opacity-40"
             >

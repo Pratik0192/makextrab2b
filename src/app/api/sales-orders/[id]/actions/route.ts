@@ -9,13 +9,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const order = await prisma.salesOrder.findUnique({ where: { id }, include: { customer: true } });
   if (!order || !canAccessOrder(user, order)) return NextResponse.json({ error: "Sales order not found." }, { status: 404 });
   if (action === "SUBMIT") {
-    if (order.status !== "DRAFT" || user.role === "SALES_EXECUTIVE" && order.createdById !== user.id) return NextResponse.json({ error: "This order cannot be submitted by you." }, { status: 403 });
-    const changed = await prisma.salesOrder.updateMany({ where: { id, status: "DRAFT" }, data: { status: "AWAITING_APPROVAL" } });
+    if (!(["DRAFT", "REJECTED"].includes(order.status)) || user.role === "SALES_EXECUTIVE" && order.createdById !== user.id) return NextResponse.json({ error: "This order cannot be submitted by you." }, { status: 403 });
+    const priorStatus = order.status;
+    const changed = await prisma.salesOrder.updateMany({ where: { id, status: priorStatus as "DRAFT" | "REJECTED" }, data: { status: "AWAITING_APPROVAL" } });
     if (!changed.count) return NextResponse.json({ error: "Order status changed. Refresh and retry." }, { status: 409 });
-    await prisma.salesOrderEvent.create({ data: { salesOrderId: id, actorId: user.id, action: "SUBMITTED_FOR_APPROVAL" } });
+    await prisma.salesOrderEvent.create({ data: { salesOrderId: id, actorId: user.id, action: priorStatus === "REJECTED" ? "RESUBMITTED_FOR_APPROVAL" : "SUBMITTED_FOR_APPROVAL" } });
     return NextResponse.json({ success: true, status: "AWAITING_APPROVAL" });
   }
   if (action === "APPROVE" || action === "RETRY_RESERVATION") {
+    if (user.role !== "SUPER_ADMIN") return NextResponse.json({ error: "Only a Super Admin can approve orders or reserve stock." }, { status: 403 });
     try { const result = await reserveOrder(id, String(body.warehouseId ?? ""), user.id); return NextResponse.json({ success: true, ...result }, { status: result.status === "SHORTAGE" ? 409 : 200 }); }
     catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Approval failed." }, { status: 409 }); }
   }

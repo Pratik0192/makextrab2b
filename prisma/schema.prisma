@@ -310,6 +310,11 @@ model Lead {
   pincode                      String
   country                      String                  @default("India")
   businessAddress              String?
+  deliveryCity                 String?
+  deliveryState                String?
+  deliveryPincode              String?
+  deliveryContactName          String?
+  deliveryContactPhone         String?
   estimatedTotalQuantity       Int?
   estimatedOrderValue          Decimal?                @db.Decimal(12, 2)
   preferredPaymentMode         PreferredPaymentMode?
@@ -839,6 +844,11 @@ model Customer {
   preferredContactMethod   PreferredContactMethod
   preferredPaymentMode     PreferredPaymentMode?
   deliveryAddress          String?
+  deliveryCity             String?
+  deliveryState            String?
+  deliveryPincode          String?
+  deliveryContactName      String?
+  deliveryContactPhone     String?
   status                   CustomerStatus         @default(ACTIVE)
   assignedSalesExecutiveId String?                @db.Uuid
   convertedFromLeadId      String?                @unique
@@ -1013,6 +1023,11 @@ model SalesOrder {
   orderDate                DateTime                @default(now())
   convertedAt              DateTime                @default(now())
   deliveryAddress          String?
+  deliveryCity             String?
+  deliveryState            String?
+  deliveryPincode          String?
+  deliveryContactName      String?
+  deliveryContactPhone     String?
   deliveryInstructions     String?
   notes                    String?
   subtotal                 Decimal                 @db.Decimal(12, 2)

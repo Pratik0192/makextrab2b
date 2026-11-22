@@ -7,14 +7,14 @@ export function canOperateOrder(user: AuthenticatedUser, order: { assignedSalesE
   return user.role === "SUPER_ADMIN" || order.assignedSalesExecutiveId === user.id || order.createdById === user.id || order.customer.assignedSalesExecutiveId === user.id;
 }
 
-async function nextCode(sequence: "picking_ref_seq" | "packing_ref_seq" | "dispatch_ref_seq", prefix: "NXT-PICK" | "NXT-PACK" | "NXT-DSP") {
+async function nextCode(sequence: "picking_ref_seq" | "packing_ref_seq" | "dispatch_ref_seq", prefix: "MXT-PICK" | "MXT-PACK" | "MXT-DSP") {
   const rows = await prisma.$queryRaw<Array<{ value: bigint }>>`SELECT nextval(${sequence}::regclass) AS value`;
   return `${prefix}-${rows[0].value.toString().padStart(6, "0")}`;
 }
 
-export const nextPickingRef = () => nextCode("picking_ref_seq", "NXT-PICK");
-export const nextPackingRef = () => nextCode("packing_ref_seq", "NXT-PACK");
-export const nextDispatchRef = () => nextCode("dispatch_ref_seq", "NXT-DSP");
+export const nextPickingRef = () => nextCode("picking_ref_seq", "MXT-PICK");
+export const nextPackingRef = () => nextCode("packing_ref_seq", "MXT-PACK");
+export const nextDispatchRef = () => nextCode("dispatch_ref_seq", "MXT-DSP");
 
 export async function createPickingList(orderId: string, actorId: string) {
   const reference = await nextPickingRef();

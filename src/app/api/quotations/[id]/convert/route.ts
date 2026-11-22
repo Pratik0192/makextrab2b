@@ -18,6 +18,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const created = await tx.salesOrder.create({ data: {
         orderNumber, quotationId: quotation.id, customerId: quotation.customerId, createdById: user.id,
         assignedSalesExecutiveId: quotation.assignedSalesExecutiveId, deliveryAddress: quotation.customer.deliveryAddress ?? quotation.customer.businessAddress,
+        deliveryCity: quotation.customer.deliveryCity ?? quotation.customer.city,
+        deliveryState: quotation.customer.deliveryState ?? quotation.customer.state,
+        deliveryPincode: quotation.customer.deliveryPincode ?? quotation.customer.pincode,
+        deliveryContactName: quotation.customer.deliveryContactName ?? quotation.customer.buyerName,
+        deliveryContactPhone: quotation.customer.deliveryContactPhone ?? quotation.customer.mobile,
         deliveryInstructions: quotation.deliveryTerms, notes: quotation.customerNotes ?? quotation.notes, subtotal: quotation.subtotal,
         discountAmount: quotation.discountAmount, taxableAmount: quotation.taxableAmount, taxAmount: quotation.taxAmount,
         totalAmount: quotation.totalAmount, currency: quotation.currency,

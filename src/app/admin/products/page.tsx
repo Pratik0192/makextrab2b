@@ -21,6 +21,7 @@ import {
 import { apiErrorMessage } from "@/services/service-utils";
 import { productSaveError } from "@/services/product-form-errors";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import {
   createProduct,
   deleteProduct,
@@ -176,6 +177,7 @@ export default function ProductsPage() {
   const [primaryKey, setPrimaryKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<AdminProduct | null>(null);
   const [wholesalePriceError, setWholesalePriceError] = useState("");
 
   async function loadProducts() {
@@ -451,7 +453,6 @@ export default function ProductsPage() {
       toast.success(editing ? "Product updated" : "Product created", { description: editing ? "Your product changes have been saved." : "The product has been added to the catalogue." });
     } catch (caught: unknown) {
       const result = productSaveError(caught, Boolean(editing), form.sku.trim().toUpperCase());
-      setError(result.message);
       const response = (caught as { response?: { data?: { error?: { field?: string; message?: string } } } }).response?.data?.error;
       if (response?.field === "wholesalePrice") setWholesalePriceError(response.message ?? result.message);
       toast.error(result.title, { description: result.message });
@@ -461,27 +462,18 @@ export default function ProductsPage() {
   }
 
   async function deleteOne(product: AdminProduct) {
-    const confirmed = window.confirm(
-      "Delete “" +
-        product.name +
-        "”? Products with stock history will be deactivated instead.",
-    );
-    if (!confirmed) return;
     try {
       const result = await deleteProduct(product.id);
-      window.alert(
-        result.deactivated
-          ? "Product deactivated because stock records must be preserved."
-          : "Product deleted.",
-      );
+      toast.success(result.deactivated ? "Product deactivated because stock records must be preserved." : "Product deleted successfully.");
       await loadProducts();
     } catch (caught: unknown) {
-      setError(apiErrorMessage(caught, "The product could not be deleted."));
+      toast.error(apiErrorMessage(caught, "The product could not be deleted."));
     }
   }
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
+      <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={open => { if (!open) setDeleteTarget(null); }} title="Delete product?" description={deleteTarget ? `Delete “${deleteTarget.name}”? Products with stock history will be deactivated to preserve records.` : "This action cannot be undone."} confirmText="Delete product" variant="destructive" onConfirm={async () => { if (deleteTarget) await deleteOne(deleteTarget); setDeleteTarget(null); }} />
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs uppercase tracking-[.18em] text-[#9a7547]">
@@ -495,7 +487,7 @@ export default function ProductsPage() {
         <button
           type="button"
           onClick={startAdd}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#542d30] px-4 text-sm font-medium text-white hover:bg-[#6b3b3d]"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#9D174D] px-4 text-sm font-medium text-white hover:bg-[#6b3b3d]"
         >
           <Plus size={16} />
           Add product
@@ -707,7 +699,7 @@ export default function ProductsPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => void deleteOne(product)}
+            onClick={() => setDeleteTarget(product)}
                         className="text-xs font-medium text-rose-700 hover:underline"
                       >
                         Delete / deactivate
@@ -1032,7 +1024,7 @@ export default function ProductsPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-md bg-[#542d30] px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-md bg-[#9D174D] px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
               >
                 {saving && <LoaderCircle size={14} className="animate-spin" />}
                 {saving

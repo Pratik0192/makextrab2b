@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import api from "@/lib/axios";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 type Quote = {
   id: string;
   quotationNumber: string;
@@ -259,6 +260,7 @@ export function QuotationCreate() {
     }[]
   >([]);
   const [canOverride, setCanOverride] = useState(false);
+  const [productsReady, setProductsReady] = useState(false);
   const [customerId, setCustomer] = useState("");
   const [validUntil, setValid] = useState("");
   const [lines, setLines] = useState([
@@ -284,12 +286,47 @@ export function QuotationCreate() {
     api
       .get("/api/quotation-products")
       .then((r) => setProducts(r.data.items || []))
-      .catch(() => setProducts([]));
+      .catch(() => setProducts([]))
+      .finally(() => setProductsReady(true));
     api
       .get("/api/auth/session")
       .then((r) => setCanOverride(r.data.data?.role === "SUPER_ADMIN"))
       .catch(() => setCanOverride(false));
   }, []);
+  useEffect(() => {
+    if (!customerId || !productsReady) return;
+    let cancelled = false;
+    setConfirmInactive(false);
+    setLines([{ productId: "", quantity: "10", unitPrice: "", discount: "0" }]);
+    api.get(`/api/customers/${encodeURIComponent(customerId)}`).then((response) => {
+      if (cancelled) return;
+      const sourceItems = (response.data?.convertedFromLead?.leadProducts ?? []) as Array<{
+        productId: string | null;
+        requestedQuantity: number;
+        product: { id: string; isActive: boolean } | null;
+      }>;
+      const productsById = new Map(products.map((product) => [product.id, product]));
+      const populated = new Map<string, { productId: string; quantity: string; unitPrice: string; discount: string }>();
+      for (const source of sourceItems) {
+        if (!source.productId || !source.product?.isActive || populated.has(source.productId)) continue;
+        const product = productsById.get(source.productId);
+        if (!product) continue;
+        populated.set(source.productId, {
+          productId: source.productId,
+          quantity: String(source.requestedQuantity),
+          unitPrice: product.wholesalePrice ?? "",
+          discount: "0",
+        });
+      }
+      if (populated.size) {
+        setLines(Array.from(populated.values()));
+        toast.success("Quotation products and quantities loaded from this customer’s originating enquiry.");
+      }
+    }).catch(() => {
+      if (!cancelled) toast.error("The customer’s originating enquiry could not be checked. You can select products manually.");
+    });
+    return () => { cancelled = true; };
+  }, [customerId, products, productsReady]);
   const selected = customers.find((c) => c.id === customerId);
   async function submit() {
     setBusy(true);
@@ -404,7 +441,7 @@ export function QuotationCreate() {
             >
               <option value="">Select active product</option>
               {products.map((p) => (
-                <option key={p.id} value={p.id} disabled={!p.wholesalePrice}>
+                <option key={p.id} value={p.id} disabled={!p.wholesalePrice || lines.some((existing, index) => index !== i && existing.productId === p.id)}>
                   {p.name} · {p.sku} · MOQ {p.minimumOrderQuantity} ·{" "}
                   {p.wholesalePrice
                     ? `₹${Number(p.wholesalePrice).toLocaleString("en-IN", { minimumFractionDigits: 2 })}/piece`

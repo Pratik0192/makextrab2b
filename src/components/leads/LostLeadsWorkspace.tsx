@@ -141,7 +141,7 @@ export default function LostLeadsWorkspace({
           Review lost enquiries and scheduled reactivation dates.
         </p>
       </div>
-      <section className="grid gap-3 rounded-lg border bg-white p-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 rounded-lg border border-[#F3DCE7] shadow-[0_5px_18px_rgba(131,24,67,0.20)] bg-white p-4 sm:grid-cols-2 xl:grid-cols-4">
         <input
           value={search}
           onChange={(e) => {
@@ -271,7 +271,7 @@ export default function LostLeadsWorkspace({
           />
         </label>
       </section>
-      <section className="overflow-x-auto rounded-lg border bg-white">
+      <section className="overflow-x-auto rounded-lg border border-[#F3DCE7] shadow-[0_5px_18px_rgba(131,24,67,0.20)] bg-white">
         <table className="w-full min-w-[1100px] text-left text-xs">
           <thead className="bg-slate-50 text-[10px] uppercase text-slate-500">
             <tr>

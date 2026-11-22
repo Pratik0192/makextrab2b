@@ -1,15 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import api from "@/lib/axios";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { toast } from "sonner";
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
   const path = usePathname();
-  const router = useRouter();
   const [record, setRecord] = useState<Record<string, any> | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const base = path.startsWith("/sales") ? "/sales" : "/admin";
   useEffect(() => {
     api
@@ -20,14 +22,14 @@ export default function CustomerDetail() {
       );
   }, [id]);
   async function updateStatus(status: string) {
-    if (!confirm(`Change customer status to ${status}?`)) return;
     setBusy(true);
     try {
       await api.patch(`/api/customers/${id}`, { status });
       const r = await api.get(`/api/customers/${id}`);
       setRecord(r.data);
+      toast.success("Customer status updated successfully.");
     } catch (e) {
-      setError((e as any).response?.data?.error || "Unable to update status.");
+      toast.error((e as any).response?.data?.error?.message || (e as any).response?.data?.error || "Unable to update status.");
     } finally {
       setBusy(false);
     }
@@ -42,6 +44,7 @@ export default function CustomerDetail() {
   const lead = record.convertedFromLead;
   return (
     <div className="space-y-5">
+      <ConfirmDialog open={Boolean(pendingStatus)} onOpenChange={open => { if (!open) setPendingStatus(null); }} title="Change customer status?" description={`Change this customer status to ${pendingStatus ?? ""}?`} confirmText="Update status" onConfirm={async () => { if (pendingStatus) await updateStatus(pendingStatus); setPendingStatus(null); }} />
       <div className="flex justify-between gap-3">
         <div>
           <p className="text-xs text-slate-500">
@@ -75,7 +78,7 @@ export default function CustomerDetail() {
                 disabled={busy}
                 aria-label="Change customer status"
                 value={record.status}
-                onChange={(e) => void updateStatus(e.target.value)}
+                onChange={(e) => setPendingStatus(e.target.value)}
                 className="h-9 inline-flex items-center rounded border border-slate-300 bg-white px-3 text-sm"
               >
                 <option>ACTIVE</option>
@@ -99,6 +102,8 @@ export default function CustomerDetail() {
               ["Business type", record.businessType],
               ["Location", `${record.city}, ${record.state} ${record.pincode}`],
               ["Address", record.businessAddress],
+              ["Shipping address", [record.deliveryAddress, record.deliveryCity, record.deliveryState, record.deliveryPincode].filter(Boolean).join(", ")],
+              ["Shipping contact", [record.deliveryContactName, record.deliveryContactPhone].filter(Boolean).join(" · ")],
               [
                 "Assigned executive",
                 record.assignedSalesExecutive

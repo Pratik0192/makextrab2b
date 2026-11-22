@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import api from "@/lib/axios";
+import { usePrompt } from "@/components/common/PromptProvider";
+import { toast } from "sonner";
 export default function QuotationDetail() {
+  const prompt = usePrompt();
   const { id } = useParams<{ id: string }>();
   const path = usePathname();
   const [record, setRecord] = useState<Record<string, any> | null>(null);
@@ -23,10 +26,7 @@ export default function QuotationDetail() {
   async function change(status: string) {
     let reason = "";
     if (status === "REJECTED" || status === "CANCELLED") {
-      reason =
-        prompt(
-          status === "REJECTED" ? "Rejection reason" : "Cancellation reason",
-        ) || "";
+      reason = (await prompt({ title: status === "REJECTED" ? "Reject quotation" : "Cancel quotation", description: status === "REJECTED" ? "Enter the rejection reason." : "Enter the cancellation reason.", required: true, multiline: true, confirmText: status === "REJECTED" ? "Reject quotation" : "Cancel quotation", variant: "destructive" })) || "";
       if (!reason) return;
     }
     try {
@@ -36,8 +36,9 @@ export default function QuotationDetail() {
         ...(status === "CANCELLED" ? { cancellationReason: reason } : {}),
       });
       await load();
+      toast.success("Quotation status updated successfully.");
     } catch (e) {
-      setError((e as any).response?.data?.error || "Status change failed.");
+      toast.error((e as any).response?.data?.error?.message || (e as any).response?.data?.error || "Status change failed.");
     }
   }
   async function convert() {

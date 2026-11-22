@@ -38,6 +38,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
         pincode: true,
         country: true,
         businessAddress: true,
+        deliveryCity: true,
+        deliveryState: true,
+        deliveryPincode: true,
+        deliveryContactName: true,
+        deliveryContactPhone: true,
         estimatedTotalQuantity: true,
         estimatedOrderValue: true,
         preferredPaymentMode: true,
@@ -97,16 +102,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   let body: unknown; try { body = await request.json(); } catch { return apiError(400, "INVALID_BODY", "Submit valid lead details."); }
   if (!body || typeof body !== "object" || Array.isArray(body)) return apiError(400, "INVALID_BODY", "Submit valid lead details.");
   const input = body as Record<string, unknown>;
-  const editable = ["businessName", "buyerName", "mobile", "whatsappNumber", "email", "gstin", "city", "state", "businessAddress", "website", "socialMediaUrl"] as const;
+  const editable = ["businessName", "buyerName", "mobile", "whatsappNumber", "email", "gstin", "city", "state", "businessAddress", "deliveryAddress", "deliveryCity", "deliveryState", "deliveryPincode", "deliveryContactName", "deliveryContactPhone", "website", "socialMediaUrl"] as const;
   const data: Record<string, string | null> = {};
   for (const field of editable) if (Object.prototype.hasOwnProperty.call(input, field)) {
     const value = input[field];
     if (value !== null && typeof value !== "string") return apiError(400, "INVALID_FIELD", `Enter a valid ${field}.`, undefined, field);
     const cleaned = typeof value === "string" ? value.trim().replace(/\s+/g, " ") : null;
-    if (cleaned && cleaned.length > (field === "businessAddress" ? 1000 : 200)) return apiError(400, "FIELD_TOO_LONG", `${field} is too long.`, undefined, field);
-    if (["businessName", "buyerName", "mobile", "email", "city", "state"].includes(field) && !cleaned) return apiError(400, "REQUIRED_FIELD", `${field} cannot be empty.`, undefined, field);
+    if (cleaned && cleaned.length > (["businessAddress", "deliveryAddress"].includes(field) ? 1000 : 200)) return apiError(400, "FIELD_TOO_LONG", `${field} is too long.`, undefined, field);
+    if (["businessName", "buyerName", "mobile", "email", "city", "state", "pincode", "businessAddress", "deliveryAddress", "deliveryCity", "deliveryState", "deliveryPincode"].includes(field) && !cleaned) return apiError(400, "REQUIRED_FIELD", `${field} cannot be empty.`, undefined, field);
     if (field === "email" && cleaned && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned)) return apiError(400, "INVALID_EMAIL", "Enter a valid email address.", undefined, field);
+    if (field === "deliveryPincode" && cleaned && !/^[A-Za-z0-9][A-Za-z0-9 -]{1,13}[A-Za-z0-9]$/.test(cleaned)) return apiError(400, "INVALID_POSTAL_CODE", "Enter a valid shipping postal code.", undefined, field);
     if ((field === "mobile" || field === "whatsappNumber") && cleaned && !normalizeMobile(cleaned)) return apiError(400, "INVALID_MOBILE", "Enter a valid 10-digit Indian mobile number.", undefined, field);
+    if (field === "deliveryContactPhone" && cleaned && !/^\+?[0-9\s()-]{7,20}$/.test(cleaned)) return apiError(400, "INVALID_MOBILE", "Enter a valid shipping contact phone number.", undefined, field);
     data[field] = cleaned;
   }
   if (!Object.keys(data).length) return apiError(400, "NO_CHANGES", "Provide at least one editable business or contact field.");
@@ -114,7 +121,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const result = await prisma.$transaction(async (tx) => {
       const current = await tx.lead.findFirst({ where: { id, mergedIntoLeadId: null }, select: { businessName:true,businessType:true,gstin:true,website:true,socialMediaUrl:true,buyerName:true,mobile:true,whatsappNumber:true,email:true,preferredContactMethod:true,city:true,state:true,pincode:true,country:true,businessAddress:true,deliveryAddress:true,notes:true } });
       if (!current) throw new Error("LEAD_NOT_FOUND");
-      const updated = await tx.lead.update({ where: { id }, data: data as Prisma.LeadUpdateInput });
+      await tx.lead.update({ where: { id }, data: data as Prisma.LeadUpdateInput });
       const merged = { ...current, ...data };
       const candidates = await findPossibleLeadDuplicates(tx, merged, id);
       await saveLeadDuplicateMatches(tx, id, candidates, auth.id);

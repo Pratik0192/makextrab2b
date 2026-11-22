@@ -34,7 +34,7 @@ function denyAdminRequest(request: NextRequest, status = 401): NextResponse {
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const isAdminRequest = pathname.startsWith("/admin") || pathname.startsWith("/api/admin/");
+  const isAdminRequest = pathname.startsWith("/admin") || pathname.startsWith("/api/admin/") || pathname.startsWith("/api/invoices") || pathname.startsWith("/api/credit-notes");
   const isSalesPage = pathname === "/sales" || pathname.startsWith("/sales/");
   const isClientRequest = pathname.startsWith("/client");
 
@@ -60,6 +60,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isSalesPage) {
+    if (pathname.startsWith("/sales/invoices") || pathname.startsWith("/sales/credit-notes")) return denyAdminRequest(request, 403);
     const token = request.cookies.get(ADMIN_COOKIE)?.value;
     if (!token) return denyAdminRequest(request);
     try {
@@ -93,5 +94,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*", "/api/admin/:path*", "/sales", "/sales/:path*", "/client", "/client/:path*"],
+  matcher: ["/admin", "/admin/:path*", "/api/admin/:path*", "/api/invoices/:path*", "/api/credit-notes/:path*", "/sales", "/sales/:path*", "/client", "/client/:path*"],
 };

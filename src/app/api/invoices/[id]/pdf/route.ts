@@ -11,9 +11,8 @@ function unavailable(message = "Invoice PDF is temporarily unavailable.") {
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthenticatedUserFromRequest(request);
-  if (!user || !["SUPER_ADMIN", "SALES_EXECUTIVE"].includes(user.role)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  if (user.role !== "SUPER_ADMIN") return NextResponse.json({ error: "Only a Super Admin can view or download invoice PDFs." }, { status: 403 });
 
   const { id } = await params;
   const invoice = await prisma.invoice.findUnique({
@@ -38,7 +37,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   let stored: Response;
   try {
     const url = await getPrivateInvoicePdfUrl(providerFileId, attachment);
-    stored = await fetch(url, { cache: "no-store", redirect: "error" });
+    // Cloudinary's signed download endpoint may redirect to the authenticated asset URL.
+    stored = await fetch(url, { cache: "no-store", redirect: "follow", signal: AbortSignal.timeout(25_000) });
   } catch (error) {
     console.error("[invoice-pdf] Cloudinary retrieval failed", {
       invoiceId: id,
@@ -57,6 +57,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       status: stored.status,
       statusText: stored.statusText,
     });
+    return unavailable();
+  }
+  if (new URL(stored.url).protocol !== "https:") {
+    console.error("[invoice-pdf] Cloudinary returned an insecure download URL", { invoiceId: id, documentId: document?.id ?? null });
     return unavailable();
   }
 

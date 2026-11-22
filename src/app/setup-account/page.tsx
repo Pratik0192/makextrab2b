@@ -26,7 +26,7 @@ export default function SetupAccountPage() {
   }
   return (
     <main className="mx-auto mt-24 max-w-md rounded-xl border bg-white p-8">
-      <h1 className="text-xl font-semibold text-[#542d30]">
+      <h1 className="text-xl font-semibold text-[#9D174D]">
         Set up your Sales Executive account
       </h1>
       <p className="mt-2 text-sm text-slate-600">
@@ -44,12 +44,12 @@ export default function SetupAccountPage() {
             className="h-11 w-full rounded border px-3 bg-white text-gray-700"
             autoComplete="new-password"
           />
-          <button className="rounded bg-[#542d30] px-4 py-2 text-white">
+          <button className="rounded bg-[#9D174D] px-4 py-2 text-white">
             Set password
           </button>
         </form>
       )}
-      <p role="status" className="mt-4 text-sm text-[#542d30]">
+      <p role="status" className="mt-4 text-sm text-[#9D174D]">
         {message}
       </p>
     </main>

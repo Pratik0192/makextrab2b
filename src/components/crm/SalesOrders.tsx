@@ -4,14 +4,19 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import api from "@/lib/axios";
 import GenerateDispatchInvoice from "@/components/crm/GenerateDispatchInvoice";
+import { usePrompt } from "@/components/common/PromptProvider";
+import { toast } from "sonner";
 
 type Order = Record<string, any>;
 export default function SalesOrders() {
+  const prompt = usePrompt();
   const path = usePathname();
   const params = useParams<{ id?: string }>();
   const base = path.startsWith("/sales") ? "/sales" : "/admin";
   const [items, setItems] = useState<Order[]>([]);
   const [record, setRecord] = useState<Order | null>(null);
+  const [deliveryDraft, setDeliveryDraft] = useState<Record<string, string>>({});
+  const [deliveryUnsaved, setDeliveryUnsaved] = useState(false);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [warehouseId, setWarehouseId] = useState("");
   const [availability, setAvailability] = useState<any>(null);
@@ -22,6 +27,16 @@ export default function SalesOrders() {
     try {
       const response = await api.get(`/api/sales-orders/${params.id}`);
       setRecord(response.data);
+      setDeliveryUnsaved(false);
+      const order = response.data;
+      setDeliveryDraft({
+        deliveryAddress: order.deliveryAddress ?? order.customer.deliveryAddress ?? order.customer.businessAddress ?? "",
+        deliveryCity: order.deliveryCity ?? order.customer.deliveryCity ?? order.customer.city ?? "",
+        deliveryState: order.deliveryState ?? order.customer.deliveryState ?? order.customer.state ?? "",
+        deliveryPincode: order.deliveryPincode ?? order.customer.deliveryPincode ?? order.customer.pincode ?? "",
+        deliveryContactName: order.deliveryContactName ?? order.customer.deliveryContactName ?? order.customer.buyerName ?? "",
+        deliveryContactPhone: order.deliveryContactPhone ?? order.customer.deliveryContactPhone ?? order.customer.mobile ?? "",
+      });
     } catch (e) {
       setError((e as any).response?.data?.error || "Unable to load order.");
     }
@@ -31,7 +46,7 @@ export default function SalesOrders() {
       void load();
       api
         .get("/api/warehouse/warehouses")
-        .then((r) => setWarehouses(r.data.items ?? []))
+        .then((r) => { if (base === "/admin") setWarehouses(r.data.items ?? []); })
         .catch(() => undefined);
     } else {
       api
@@ -56,20 +71,22 @@ export default function SalesOrders() {
     let reason = "";
     if (["CANCEL", "REJECT", "HOLD"].includes(name)) {
       reason =
-        window.prompt(
-          name === "CANCEL"
+        (await prompt({
+          title: name === "CANCEL" ? "Cancel order" : name === "REJECT" ? "Reject order" : "Place order on hold",
+          description: name === "CANCEL"
             ? "Cancellation reason (required)"
             : name === "REJECT"
               ? "Rejection reason (required)"
               : "Reason (optional)",
-        ) || "";
+          required: ["CANCEL", "REJECT"].includes(name), multiline: true,
+          confirmText: name === "CANCEL" ? "Cancel order" : name === "REJECT" ? "Reject order" : "Continue",
+          variant: ["CANCEL", "REJECT"].includes(name) ? "destructive" : "default",
+        })) || "";
       if (["CANCEL", "REJECT"].includes(name) && !reason.trim()) return;
     }
     const selectedWarehouse =
       name === "APPROVE" || name === "RETRY_RESERVATION"
-        ? warehouseId ||
-          window.prompt("Enter the active warehouse ID to reserve from") ||
-          ""
+        ? warehouseId || (await prompt({ title: "Select warehouse", description: "Enter the active warehouse ID to reserve stock from.", required: true })) || ""
         : "";
     setBusy(true);
     setError("");
@@ -80,9 +97,24 @@ export default function SalesOrders() {
         warehouseId: selectedWarehouse,
       });
       await load();
+      toast.success("Order action completed successfully.");
     } catch (e) {
-      setError((e as any).response?.data?.error || "Order action failed.");
+      toast.error((e as any).response?.data?.error?.message || (e as any).response?.data?.error || "Order action failed.");
       await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function saveDeliveryDetails() {
+    if (!params.id) return;
+    setBusy(true);
+    try {
+      await api.patch(`/api/sales-orders/${params.id}`, deliveryDraft);
+      await load();
+      setDeliveryUnsaved(false);
+      toast.success("Order delivery details saved.");
+    } catch (e) {
+      toast.error((e as any).response?.data?.error?.message || (e as any).response?.data?.error || "Delivery details could not be saved.");
     } finally {
       setBusy(false);
     }
@@ -179,8 +211,8 @@ export default function SalesOrders() {
       </section>
     );
   if (!record) return <p>Loading sales order…</p>;
-  const canApprove = true;
   const isAdmin = base === "/admin";
+  const canApprove = isAdmin;
   const reserved = record.reservations.some(
     (r: any) => r.status === "RESERVED",
   );
@@ -197,13 +229,13 @@ export default function SalesOrders() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {record.status === "DRAFT" && (
+          {["DRAFT", "REJECTED"].includes(record.status) && (
             <button
-              disabled={busy}
+              disabled={busy || deliveryUnsaved}
               onClick={() => void action("SUBMIT")}
               className="rounded bg-[#9D174D] px-3 py-2 text-sm text-white"
             >
-              Submit for approval
+              {record.status === "REJECTED" ? "Resubmit for approval" : "Submit for approval"}
             </button>
           )}
           {canApprove && record.status === "AWAITING_APPROVAL" && (
@@ -328,8 +360,13 @@ export default function SalesOrders() {
             {record.customer.buyerName} · {record.customer.mobile}
           </p>
           <p className="mt-3 whitespace-pre-line text-sm">
-            {record.deliveryAddress || "No delivery address on file"}
+            {[record.deliveryAddress, record.deliveryCity, record.deliveryState, record.deliveryPincode].filter(Boolean).join(", ") || "No delivery address on file"}
           </p>
+          {(record.deliveryContactName || record.deliveryContactPhone) && <p className="mt-2 text-sm text-slate-600">Shipping contact: {[record.deliveryContactName, record.deliveryContactPhone].filter(Boolean).join(" · ")}</p>}
+          {["DRAFT", "REJECTED"].includes(record.status) && <form className="mt-4 space-y-2 border-t pt-4" onSubmit={(event) => { event.preventDefault(); void saveDeliveryDetails(); }}>
+            {([ ["deliveryAddress", "Shipping address"], ["deliveryCity", "Shipping city"], ["deliveryState", "Shipping state"], ["deliveryPincode", "Shipping postal code"], ["deliveryContactName", "Shipping contact person"], ["deliveryContactPhone", "Shipping contact phone"] ] as const).map(([key, label]) => <label key={key} className="block text-xs text-slate-600">{label}<input required={!['deliveryContactName', 'deliveryContactPhone'].includes(key)} value={deliveryDraft[key] ?? ""} onChange={(event) => { setDeliveryUnsaved(true); setDeliveryDraft((current) => ({ ...current, [key]: event.target.value })); }} className="mt-1 w-full rounded border bg-white px-2 py-1.5 text-sm" /></label>)}
+            <button disabled={busy} className="rounded border px-3 py-2 text-xs disabled:opacity-50">Save delivery details</button>
+          </form>}
           <p className="mt-2 text-sm text-slate-600">
             {record.deliveryInstructions || "No delivery instructions"}
           </p>

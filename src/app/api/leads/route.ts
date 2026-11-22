@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       const duplicateMatches = await findPossibleLeadDuplicates(transaction, submission);
       const productsById = new Map(products.map((product) => [product.id, product]));
       const sequence = await transaction.$queryRaw<Array<{ value: bigint }>>`SELECT nextval('lead_reference_number_seq'::regclass) AS value`;
-      const referenceNumber = `NXT-LEAD-${sequence[0].value.toString().padStart(6, "0")}`;
+      const referenceNumber = `MXT-LEAD-${sequence[0].value.toString().padStart(6, "0")}`;
       const created = await transaction.lead.create({
         data: {
           referenceNumber,
@@ -114,6 +114,11 @@ export async function POST(request: NextRequest) {
           pincode: submission.pincode,
           country: submission.country,
           businessAddress: submission.businessAddress,
+          deliveryCity: submission.deliveryCity,
+          deliveryState: submission.deliveryState,
+          deliveryPincode: submission.deliveryPincode,
+          deliveryContactName: submission.deliveryContactName,
+          deliveryContactPhone: submission.deliveryContactPhone,
           estimatedTotalQuantity: submission.productInterests.length
             ? submission.productInterests.reduce((total, item) => total + item.requestedQuantity, 0)
             : null,

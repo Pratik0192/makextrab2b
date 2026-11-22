@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import api from "@/lib/axios";
+import { toast } from "sonner";
+import { usePrompt } from "@/components/common/PromptProvider";
 import GenerateDispatchInvoice from "@/components/crm/GenerateDispatchInvoice";
 type Row = Record<string, any>;
 const money = (x: unknown) =>
@@ -20,7 +22,6 @@ export function InvoiceWorkspace({ isAdmin }: { isAdmin: boolean }) {
   const [sort, setSort] = useState("createdAt");
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
-  const [error, setError] = useState("");
   useEffect(() => {
     const query = new URLSearchParams({
       page: String(page),
@@ -39,9 +40,7 @@ export function InvoiceWorkspace({ isAdmin }: { isAdmin: boolean }) {
         setItems(r.data.items);
         setPageCount(Math.max(1, Math.ceil(r.data.total / r.data.pageSize)));
       })
-      .catch((e) =>
-        setError(e.response?.data?.error || "Could not load invoices."),
-      );
+      .catch((e) => toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Could not load invoices."));
   }, [q, status, paymentStatus, customerId, from, to, sort, page]);
   useEffect(() => {
     if (isAdmin)
@@ -50,11 +49,7 @@ export function InvoiceWorkspace({ isAdmin }: { isAdmin: boolean }) {
           `/api/invoices/eligible-dispatches${eligibleQ ? `?q=${encodeURIComponent(eligibleQ)}` : ""}`,
         )
         .then((r) => setDispatches(r.data.items))
-        .catch((e) =>
-          setError(
-            e.response?.data?.error || "Could not load eligible dispatches.",
-          ),
-        );
+        .catch((e) => toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Could not load eligible dispatches."));
   }, [eligibleQ, isAdmin]);
   return (
     <section className="space-y-4">
@@ -185,11 +180,6 @@ export function InvoiceWorkspace({ isAdmin }: { isAdmin: boolean }) {
           ))}
         </select>
       </div>
-      {error && (
-        <p role="alert" className="text-rose-700">
-          {error}
-        </p>
-      )}
       <div className="overflow-x-auto rounded-lg border border-slate-300 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs">
@@ -284,6 +274,7 @@ export function InvoiceWorkspace({ isAdmin }: { isAdmin: boolean }) {
 }
 
 export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
+  const prompt = usePrompt();
   const params = useParams<{ id: string }>();
   const [invoice, setInvoice] = useState<Row | null>(null);
   const [error, setError] = useState("");
@@ -327,14 +318,15 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
   useEffect(() => {
     void load();
   }, [params.id]);
-  async function act(task: () => Promise<any>) {
+  async function act(task: () => Promise<any>, successMessage?: string, failureMessage = "Invoice action failed.") {
     setBusy(true);
     setError("");
     try {
       await task();
       await load();
+      if (successMessage) toast.success(successMessage);
     } catch (e: any) {
-      setError(e.response?.data?.error || "Invoice action failed.");
+      toast.error(e.response?.data?.error?.message || e.response?.data?.error || failureMessage);
     } finally {
       setBusy(false);
     }
@@ -349,6 +341,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
         ...payment,
         idempotencyKey: key,
       });
+      toast.success("Payment recorded successfully.");
       setPaymentKey(crypto.randomUUID());
       setPayment({
         ...payment,
@@ -358,7 +351,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
       });
       await load();
     } catch (e: any) {
-      setError(e.response?.data?.error || "Payment could not be recorded.");
+      toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Payment could not be recorded.");
     } finally {
       setBusy(false);
     }
@@ -598,7 +591,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
                     reverseCharge,
                     charges,
                     dueDate: dueDate || null,
-                  }),
+                  }), "Invoice draft saved successfully.",
                 )
               }
               className="self-end rounded border border-slate-300 px-3 py-2 text-sm bg-white"
@@ -607,7 +600,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
             </button>
             <button
               disabled={busy}
-              onClick={() => void act(saveAndIssue)}
+              onClick={() => void act(saveAndIssue, "Invoice issued successfully.", "Failed to issue invoice.")}
               className="self-end rounded bg-emerald-700 px-3 py-2 text-sm text-white"
             >
               Issue invoice
@@ -727,11 +720,12 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
             </p>
             <button
               disabled={busy}
-              onClick={() => {
-                const reason = window.prompt("Required cancellation reason");
+              onClick={async () => {
+                const reason = await prompt({ title: "Cancel invoice", description: "This cancels the invoice and records an audit reason. Enter the required cancellation reason.", required: true, multiline: true, confirmText: "Cancel invoice", variant: "destructive" });
                 if (reason)
-                  void act(() =>
-                    api.post(`/api/invoices/${invoice.id}/cancel`, { reason }),
+                  void act(
+                    () => api.post(`/api/invoices/${invoice.id}/cancel`, { reason }),
+                    "Invoice cancelled successfully.",
                   );
               }}
               className="mt-2 rounded border border-rose-300 px-3 py-2 text-sm text-rose-700"
@@ -788,7 +782,7 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
                     })),
                 });
                 window.location.href = `/admin/credit-notes/${r.data.item.id}`;
-              })
+              }, "Credit note draft created successfully.")
             }
             className="mt-3 rounded border border-slate-300 px-3 py-2 text-sm"
           >
@@ -814,15 +808,12 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
               </p>
               {isAdmin && p.status === "RECORDED" && (
                 <button
-                  onClick={() => {
-                    const reason = window.prompt(
-                      "Reason for reversing this payment",
-                    );
+                  onClick={async () => {
+                    const reason = await prompt({ title: "Reverse payment", description: "This reverses the recorded payment. Enter the reason for the audit history.", required: true, multiline: true, confirmText: "Reverse payment", variant: "destructive" });
                     if (reason)
-                      void act(() =>
-                        api.post(`/api/invoices/payments/${p.id}/reverse`, {
-                          reason,
-                        }),
+                      void act(
+                        () => api.post(`/api/invoices/payments/${p.id}/reverse`, { reason }),
+                        "Payment reversed successfully.",
                       );
                   }}
                   className="mt-1 text-xs text-rose-700 underline"
@@ -879,16 +870,14 @@ export function InvoiceDetail({ isAdmin }: { isAdmin: boolean }) {
           ))}
           {isAdmin && (
             <button
-              onClick={() => {
-                const reason = window.prompt(
-                  "Reason for regenerating the PDF from its saved invoice snapshots",
-                );
+              onClick={async () => {
+                const reason = await prompt({ title: "Regenerate invoice PDF", description: "The new PDF will be created from the saved invoice snapshots. Add a reason for the audit history.", required: true, multiline: true });
                 if (reason)
                   void act(() =>
                     api.post(`/api/invoices/${invoice.id}/pdf/regenerate`, {
                       reason,
                     }),
-                  );
+                    "Invoice PDF regenerated successfully.", "Failed to regenerate invoice PDF.");
               }}
               className="mt-2 rounded border border-slate-300 px-3 py-2 text-sm"
             >

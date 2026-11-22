@@ -3,6 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/axios";
+import { usePrompt } from "@/components/common/PromptProvider";
+import { toast } from "sonner";
 
 const tabs = [
   ["/admin/settings/company", "Company profile"],
@@ -92,6 +94,7 @@ const fields = (
     </label>
   ));
 export default function BillingSettings() {
+  const prompt = usePrompt();
   const path = usePathname();
   const [form, setForm] = useState<Record<string, any>>(blank);
   const [rates, setRates] = useState<any[]>([]);
@@ -100,7 +103,6 @@ export default function BillingSettings() {
   const [numbering, setNumbering] = useState<any[]>([]);
   const [charges, setCharges] = useState<any[]>([]);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [rate, setRate] = useState<any>(rateBlank);
   const [hsnForm, setHsnForm] = useState<any>(hsnBlank);
@@ -174,13 +176,12 @@ export default function BillingSettings() {
   async function save(action: () => Promise<unknown>, message = "Saved.") {
     setBusy(true);
     setError("");
-    setNotice("");
     try {
       await action();
-      setNotice(message);
       await load();
+      toast.success(message);
     } catch (e: any) {
-      setError(e.response?.data?.error || e.message || "Save failed.");
+      toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Save failed.");
     } finally {
       setBusy(false);
     }
@@ -223,14 +224,6 @@ export default function BillingSettings() {
           className="rounded bg-rose-50 p-3 text-sm text-rose-700"
         >
           {error}
-        </p>
-      )}
-      {notice && (
-        <p
-          role="status"
-          className="rounded bg-emerald-50 p-3 text-sm text-emerald-700"
-        >
-          {notice}
         </p>
       )}
       {path.endsWith("/company") && (
@@ -393,11 +386,8 @@ export default function BillingSettings() {
                         <>
                           <button
                             className="mr-2 underline"
-                            onClick={() => {
-                              const value = window.prompt(
-                                "Enter CGST, SGST, IGST, Cess percentages separated by commas",
-                                `${r.cgstPercent},${r.sgstPercent},${r.igstPercent},${r.cessPercent}`,
-                              );
+                            onClick={async () => {
+                              const value = await prompt({ title: "Edit GST rates", description: "Enter CGST, SGST, IGST and Cess percentages separated by commas.", initialValue: `${r.cgstPercent},${r.sgstPercent},${r.igstPercent},${r.cessPercent}`, required: true });
                               if (value) {
                                 const [
                                   cgstPercent,

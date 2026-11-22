@@ -27,6 +27,11 @@ export interface CreateLeadRequest {
   pincode: string;
   country: string;
   businessAddress: string;
+  deliveryCity: string;
+  deliveryState: string;
+  deliveryPincode: string;
+  deliveryContactName: string;
+  deliveryContactPhone: string;
   estimatedOrderValue: string;
   preferredPaymentMode: LeadPaymentMode | "";
   deliveryAddress: string;
@@ -84,6 +89,11 @@ export interface LeadDetail extends Omit<LeadListItem, "leadProducts" | "lostHis
   pincode: string;
   country: string;
   businessAddress: string | null;
+  deliveryCity: string | null;
+  deliveryState: string | null;
+  deliveryPincode: string | null;
+  deliveryContactName: string | null;
+  deliveryContactPhone: string | null;
   estimatedTotalQuantity: number | null;
   estimatedOrderValue: string | number | null;
   preferredPaymentMode: LeadPaymentMode | null;

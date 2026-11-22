@@ -22,22 +22,22 @@ export default function Footer() {
           </h2>
           <ul className="space-y-3 text-xs text-[#827572]">
             <li>
-              <Link href="/" className="hover:text-[#542d30]">
+              <Link href="/" className="hover:text-[#9D174D]">
                 Home
               </Link>
             </li>
             <li>
-              <Link href="/products" className="hover:text-[#542d30]">
+              <Link href="/products" className="hover:text-[#9D174D]">
                 Products
               </Link>
             </li>
             <li>
-              <Link href="/categories" className="hover:text-[#542d30]">
+              <Link href="/categories" className="hover:text-[#9D174D]">
                 Categories
               </Link>
             </li>
             <li>
-              <Link href="/collections" className="hover:text-[#542d30]">
+              <Link href="/collections" className="hover:text-[#9D174D]">
                 Collections
               </Link>
             </li>
@@ -53,7 +53,7 @@ export default function Footer() {
           </p>
           <Link
             href="/products"
-            className="mt-3 inline-block text-xs font-medium text-[#542d30]"
+            className="mt-3 inline-block text-xs font-medium text-[#9D174D]"
           >
             Browse products →
           </Link>

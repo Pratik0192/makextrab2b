@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 type Executive = {
   id: string;
   firstName: string;
@@ -74,9 +75,19 @@ export default function SalesExecutivesPage() {
       );
     }
   }
+  async function copyActivationLink() {
+    try {
+      await navigator.clipboard.writeText(activationUrl);
+      toast.success("Copied to clipboard successfully.");
+    } catch {
+      toast.error(
+        "Could not copy the activation link. Check clipboard permissions and try again.",
+      );
+    }
+  }
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <section className="rounded-xl border bg-white p-5">
+      <section className="rounded-xl border border-[#F3DCE7] shadow-[0_5px_18px_rgba(131,24,67,0.20)] bg-white p-5">
         <h2 className="font-serif text-xl">Create Sales Executive</h2>
         <p className="mt-1 text-xs text-slate-500">
           An inactive account is created. Share its one-time setup link
@@ -86,35 +97,35 @@ export default function SalesExecutivesPage() {
           onSubmit={create}
           className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
         >
-          <input
+          <Input
             required
             placeholder="First name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="h-10 rounded border px-3 text-sm bg-white"
+            className="border-none"
           />
-          <input
+          <Input
             required
             placeholder="Last name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="h-10 rounded border px-3 text-sm bg-white"
+            className="border-none"
           />
-          <input
+          <Input
             required
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-10 rounded border px-3 text-sm bg-white"
+            className="border-none"
           />
-          <input
+          <Input
             placeholder="Mobile (optional)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="h-10 rounded border px-3 text-sm bg-white"
+            className="border-b border-[#9D174D]"
           />
-          <button className="rounded bg-[#542d30] px-4 text-sm text-white">
+          <button className="rounded bg-[#9D174D] px-4 text-sm text-white">
             Create account
           </button>
         </form>
@@ -128,9 +139,8 @@ export default function SalesExecutivesPage() {
                 className="min-w-0 flex-1 rounded border bg-white p-2"
               />
               <button
-                onClick={() =>
-                  void navigator.clipboard.writeText(activationUrl)
-                }
+                type="button"
+                onClick={() => void copyActivationLink()}
                 className="rounded border px-3"
               >
                 Copy
@@ -145,7 +155,7 @@ export default function SalesExecutivesPage() {
           </div>
         )}
       </section>
-      <section className="overflow-hidden rounded-xl border bg-white">
+      <section className="overflow-hidden rounded-xl border border-[#F3DCE7] shadow-[0_5px_18px_rgba(131,24,67,0.20)] bg-white">
         <div className="border-b p-5">
           <h2 className="font-serif text-xl">Sales Executives</h2>
         </div>

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
+import { toast } from "sonner";
 export default function EditCustomerPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -28,6 +29,12 @@ export default function EditCustomerPage() {
               "website",
               "socialMediaUrl",
               "businessAddress",
+              "deliveryAddress",
+              "deliveryCity",
+              "deliveryState",
+              "deliveryPincode",
+              "deliveryContactName",
+              "deliveryContactPhone",
               "city",
               "state",
               "pincode",
@@ -51,9 +58,7 @@ export default function EditCustomerPage() {
       await api.patch(`/api/customers/${id}`, values);
       router.push(`/admin/customers/${id}`);
     } catch (err) {
-      setError(
-        (err as any).response?.data?.error || "Could not save customer.",
-      );
+      toast.error((err as any).response?.data?.error?.message || (err as any).response?.data?.error || "Could not save customer.");
     } finally {
       setBusy(false);
     }
@@ -87,6 +92,12 @@ export default function EditCustomerPage() {
             ["website", "Website"],
             ["socialMediaUrl", "Social URL"],
             ["businessAddress", "Business address"],
+            ["deliveryAddress", "Shipping address"],
+            ["deliveryCity", "Shipping city"],
+            ["deliveryState", "Shipping state"],
+            ["deliveryPincode", "Shipping postal code"],
+            ["deliveryContactName", "Shipping contact person"],
+            ["deliveryContactPhone", "Shipping contact phone"],
             ["city", "City"],
             ["state", "State"],
             ["pincode", "Pincode"],
@@ -96,6 +107,7 @@ export default function EditCustomerPage() {
           <label key={key} className="text-xs">
             {label}
             <input
+              required={["businessAddress", "deliveryAddress", "deliveryCity", "deliveryState", "deliveryPincode"].includes(key)}
               value={values[key] || ""}
               onChange={(e) =>
                 setValues((v) => ({ ...v, [key]: e.target.value }))

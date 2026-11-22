@@ -10,6 +10,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { apiErrorMessage } from "@/services/service-utils";
 import {
   listCategories,
@@ -48,6 +49,7 @@ export default function CatalogueTaxonomyManager({ kind }: Props) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Entry | null>(null);
   const [editing, setEditing] = useState<Entry | null>(null);
   const [form, setForm] = useState<CreateCategoryRequest>(blank);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -138,7 +140,6 @@ export default function CatalogueTaxonomyManager({ kind }: Props) {
     }
   };
   const remove = async (entry: Entry) => {
-    if (!window.confirm(`Delete “${entry.name}”?`)) return;
     try {
       if (kind === "categories") await deleteCategory(entry.id);
       else await deleteCollection(entry.id);
@@ -152,6 +153,7 @@ export default function CatalogueTaxonomyManager({ kind }: Props) {
   };
   return (
     <section className="mx-auto max-w-7xl space-y-5">
+      <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={open => { if (!open) setDeleteTarget(null); }} title={`Delete ${singular.toLowerCase()}?`} description={deleteTarget ? `Delete “${deleteTarget.name}”? This action may affect catalogue visibility.` : "This action cannot be undone."} confirmText={`Delete ${singular.toLowerCase()}`} variant="destructive" onConfirm={async () => { if (deleteTarget) await remove(deleteTarget); setDeleteTarget(null); }} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[.18em] text-[#9a7547]">
@@ -254,7 +256,7 @@ export default function CatalogueTaxonomyManager({ kind }: Props) {
                         </button>
                         <button
                           aria-label={`Delete ${entry.name}`}
-                          onClick={() => void remove(entry)}
+                        onClick={() => setDeleteTarget(entry)}
                           className="rounded p-2 text-rose-600 hover:bg-rose-50"
                         >
                           <Trash2 size={16} />

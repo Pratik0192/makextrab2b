@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import api from "@/lib/axios";
 import GenerateDispatchInvoice from "@/components/crm/GenerateDispatchInvoice";
+import { usePrompt } from "@/components/common/PromptProvider";
+import { toast } from "sonner";
 
 type Row = Record<string, any>;
 const stages = [
@@ -16,6 +18,7 @@ const stages = [
   "RETURNED",
 ];
 export default function WarehouseOperations() {
+  const prompt = usePrompt();
   const params = useParams<{ id?: string }>();
   const path = usePathname();
   const base = path.startsWith("/admin") ? "/admin" : "/sales";
@@ -61,8 +64,9 @@ export default function WarehouseOperations() {
     try {
       await task();
       await loadOrder();
+      toast.success("Warehouse operation completed successfully.");
     } catch (e: any) {
-      setError(e.response?.data?.error || "Operation failed.");
+      toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Operation failed.");
     } finally {
       setBusy(false);
     }
@@ -312,13 +316,11 @@ export default function WarehouseOperations() {
                       />
                       <button
                         disabled={busy}
-                        onClick={() => {
+                        onClick={async () => {
                           const quantity = pick[line.id] ?? line.pickedQuantity;
                           const note =
                             quantity < line.reservedQuantity
-                              ? window.prompt(
-                                  "Reason for pick discrepancy (required)",
-                                ) || ""
+                              ? (await prompt({ title: "Pick discrepancy", description: "Enter the required reason for the quantity discrepancy.", required: true, multiline: true })) || ""
                               : "";
                           if (quantity < line.reservedQuantity && !note) return;
                           void run(() =>
@@ -397,7 +399,7 @@ export default function WarehouseOperations() {
             </div>
             <button
               disabled={busy}
-              onClick={() => {
+              onClick={async () => {
                 const items = Object.entries(pack)
                   .filter(([, quantity]) => quantity > 0)
                   .map(([salesOrderItemId, quantity]) => ({
@@ -405,18 +407,18 @@ export default function WarehouseOperations() {
                     quantity,
                   }));
                 if (!items.length) {
-                  setError("Enter packed quantities first.");
+                  toast.error("Enter packed quantities first.");
                   return;
                 }
+                const description = await prompt({ title: "Package description", description: "Optional description for this package." });
+                if (description === null) return;
                 void run(async () => {
                   const r = await api.post(
                     `/api/warehouse/orders/${order.id}/packing`,
                     {
                       packages: [
                         {
-                          description:
-                            window.prompt("Package description (optional)") ||
-                            "",
+                          description,
                           items,
                         },
                       ],
@@ -551,7 +553,9 @@ export default function WarehouseOperations() {
                     </select>
                     <button
                       disabled={busy}
-                      onClick={() =>
+                      onClick={async () => {
+                        const failureReason = deliveryStatus === "DELIVERY_FAILED" ? await prompt({ title: "Delivery failed", description: "Enter the delivery failure reason.", required: true, multiline: true }) : undefined;
+                        if (deliveryStatus === "DELIVERY_FAILED" && !failureReason) return;
                         void run(() =>
                           api.post(
                             `/api/warehouse/dispatches/${d.id}/delivery`,
@@ -559,14 +563,13 @@ export default function WarehouseOperations() {
                               status: deliveryStatus,
                               ...(deliveryStatus === "DELIVERY_FAILED"
                                 ? {
-                                    failureReason:
-                                      window.prompt("Failure reason"),
+                                    failureReason,
                                   }
                                 : {}),
                             },
                           ),
-                        )
-                      }
+                        );
+                      }}
                       className="rounded bg-[#9D174D] text-white px-3 py-2"
                     >
                       Update delivery

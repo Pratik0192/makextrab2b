@@ -3,7 +3,7 @@ import type { AuthenticatedUser } from "@/types/auth";
 
 export async function nextSalesOrderNumber() {
   const rows = await prisma.$queryRaw<Array<{ value: bigint }>>`SELECT nextval('sales_order_number_seq'::regclass) AS value`;
-  return `NXT-ORD-${rows[0].value.toString().padStart(6, "0")}`;
+  return `MXT-ORD-${rows[0].value.toString().padStart(6, "0")}`;
 }
 
 export function canAccessOrder(user: AuthenticatedUser, order: { assignedSalesExecutiveId: string | null; createdById: string; customer: { assignedSalesExecutiveId: string | null } }) {

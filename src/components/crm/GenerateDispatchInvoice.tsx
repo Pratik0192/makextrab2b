@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
+import { toast } from "sonner";
 
 type Preview = {
   rows: Array<any>;
@@ -27,7 +28,6 @@ export default function GenerateDispatchInvoice({
     {},
   );
   const [preview, setPreview] = useState<Preview | null>(null);
-  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (open)
@@ -51,35 +51,27 @@ export default function GenerateDispatchInvoice({
   };
 
   async function runPreview() {
-    setError("");
     setPreview(null);
-    if (!treatment)
-      return setError("Select the authorized place-of-supply tax treatment.");
-    if (!placeOfSupply.trim() || !/^\d{2}$/.test(stateCode))
-      return setError(
-        "Enter the professionally determined place of supply and two-digit state code.",
-      );
+    if (!treatment) return toast.error("Select the authorized place-of-supply tax treatment.");
+    if (!placeOfSupply.trim() || !/^\d{2}$/.test(stateCode)) return toast.error("Enter the professionally determined place of supply and two-digit state code.");
     setBusy(true);
     try {
       const r = await api.post("/api/invoices/preview", decision);
       setPreview(r.data.preview);
     } catch (e: any) {
-      setError(
-        e.response?.data?.error || "Could not preview dispatch invoice.",
-      );
+      toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Could not preview dispatch invoice.");
     } finally {
       setBusy(false);
     }
   }
 
   async function createDraft() {
-    setError("");
     setBusy(true);
     try {
       const r = await api.post("/api/invoices", decision);
       router.push(`/admin/invoices/${r.data.item.id}`);
     } catch (e: any) {
-      setError(e.response?.data?.error || "Could not create invoice draft.");
+      toast.error(e.response?.data?.error?.message || e.response?.data?.error || "Could not create invoice draft.");
     } finally {
       setBusy(false);
     }
@@ -180,11 +172,6 @@ export default function GenerateDispatchInvoice({
                 </label>
               ))}
             </div>
-          )}
-          {error && (
-            <p role="alert" className="mt-2 text-sm text-rose-700">
-              {error}
-            </p>
           )}
           {preview && (
             <>

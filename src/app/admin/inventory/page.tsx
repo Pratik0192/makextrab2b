@@ -10,6 +10,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { apiErrorMessage } from "@/services/service-utils";
 import {
   adjustStock,
@@ -55,6 +56,7 @@ export default function InventoryPage() {
     [busy, setBusy] = useState(false),
     [ledger, setLedger] = useState<StockLedger[] | null>(null),
     [transferOpen, setTransferOpen] = useState(false),
+    [transferConfirmOpen, setTransferConfirmOpen] = useState(false),
     [transferRows, setTransferRows] = useState<StockTransfer[] | null>(null),
     [transferPage, setTransferPage] = useState(1),
     [transferPages, setTransferPages] = useState(1),
@@ -199,12 +201,14 @@ export default function InventoryPage() {
       toast.error("Choose a product and two warehouses.");
       return;
     }
-    if (
-      !window.confirm(
-        `Confirm transfer of ${transferForm.quantity} × ${product.name} (${product.sku}) from ${source.name} to ${destination.name}?`,
-      )
-    )
-      return;
+    setTransferConfirmOpen(true);
+  };
+  const completeTransfer = async () => {
+    const product = products.find((p) => p.id === transferForm.productId);
+    const source = warehouses.find((w) => w.id === transferForm.sourceWarehouseId);
+    const destination = warehouses.find((w) => w.id === transferForm.destinationWarehouseId);
+    if (!product || !source || !destination) return;
+    setTransferConfirmOpen(false);
     setBusy(true);
     try {
       await createStockTransfer({
@@ -228,6 +232,7 @@ export default function InventoryPage() {
   };
   return (
     <section className="mx-auto max-w-7xl space-y-5">
+      <ConfirmDialog open={transferConfirmOpen} onOpenChange={setTransferConfirmOpen} title="Confirm warehouse transfer?" description={`Transfer ${transferForm.quantity} × ${products.find(p => p.id === transferForm.productId)?.name ?? "product"} from ${warehouses.find(w => w.id === transferForm.sourceWarehouseId)?.name ?? "source warehouse"} to ${warehouses.find(w => w.id === transferForm.destinationWarehouseId)?.name ?? "destination warehouse"}?`} confirmText="Transfer stock" onConfirm={completeTransfer} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[.18em] text-[#9a7547]">

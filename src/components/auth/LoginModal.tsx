@@ -59,7 +59,7 @@ export default function LoginModal({ className }: { className?: string }) {
     if (!nextOpen) setErrorMessage("");
   }}>
     <DialogTrigger asChild>
-      <button type="button" className={className ?? "inline-flex items-center justify-center rounded-sm border border-[#542d30] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[.13em] text-[#542d30] transition hover:bg-[#542d30] hover:text-white"}>
+      <button type="button" className={className ?? "inline-flex items-center justify-center rounded-sm border border-[#9D174D] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[.13em] text-[#9D174D] transition hover:bg-[#9D174D] hover:text-white"}>
         Login
       </button>
     </DialogTrigger>
@@ -78,13 +78,13 @@ export default function LoginModal({ className }: { className?: string }) {
           <label htmlFor="admin-login-password" className="text-xs font-medium text-[#554544]">Password</label>
           <div className="relative">
             <input id="admin-login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" required maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} className="h-11 w-full rounded-md border border-[#e4d9d1] bg-white px-3 pr-11 text-sm text-[#342424] outline-none transition focus:border-[#8e5b5c] focus:ring-2 focus:ring-[#8e5b5c]/15" />
-            <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 grid w-11 place-items-center text-[#8a7a75] hover:text-[#542d30]">
+            <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 grid w-11 place-items-center text-[#8a7a75] hover:text-[#9D174D]">
               {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
           </div>
         </div>
         {errorMessage && <p role="alert" className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-5 text-rose-800">{errorMessage}</p>}
-        <button type="submit" disabled={loading} className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#542d30] text-xs font-semibold uppercase tracking-[.12em] text-white transition hover:bg-[#6b3b3d] disabled:cursor-not-allowed disabled:opacity-65">
+        <button type="submit" disabled={loading} className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#9D174D] text-xs font-semibold uppercase tracking-[.12em] text-white transition hover:bg-[#6b3b3d] disabled:cursor-not-allowed disabled:opacity-65">
           {loading && <LoaderCircle size={16} className="animate-spin" />}{loading ? "Signing in…" : "Sign in"}
         </button>
         <p className="text-center text-[10px] text-[#978984]">Authorized staff access</p>

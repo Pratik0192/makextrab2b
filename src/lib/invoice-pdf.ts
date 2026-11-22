@@ -1,38 +1,20 @@
 import type { Prisma } from "@/generated/prisma";
-import sharp from "sharp";
+import { InvoicePdfGenerationError, isValidInvoicePdf } from "./invoice-pdf-storage.ts";
+import { renderHtmlPdf } from "./pdf/puppeteer.ts";
+import { renderInvoiceHtml } from "./invoice-pdf-template.ts";
 
-type InvoiceForPdf = Prisma.InvoiceGetPayload<{ include: { items: true; customer: true; salesOrder: true; dispatch: true; financialYear: true } }>;
-const printable = (s: unknown) => String(s ?? "").normalize("NFKD").replace(/[^\x20-\x7E]/g, " ").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
-const money = (n: unknown) => `INR ${Number(String(n ?? 0)).toFixed(2)}`;
-function wrap(value: unknown, max: number) { const words = String(value ?? "").split(/\s+/); const out: string[] = []; let line = ""; for (const word of words) { if ((line + " " + word).trim().length > max && line) { out.push(line); line = word; } else line = (line + " " + word).trim(); } if (line) out.push(line); return out.length ? out : [""]; }
+type InvoiceForPdf = Prisma.InvoiceGetPayload<{
+  include: { items: true; customer: true; salesOrder: true; dispatch: true; financialYear: true };
+}>;
 
-/** Small dependency-free, multipage A4 PDF renderer. Output is the immutable document stored at issue time. */
+/** Render the saved invoice snapshot into an A4 PDF without recalculating any invoice values. */
 export async function renderInvoicePdf(invoice: InvoiceForPdf): Promise<Buffer> {
-  const seller = invoice.companySnapshot as Record<string, unknown>; const buyer = invoice.customerSnapshot as Record<string, unknown>; const shipping = invoice.shippingSnapshot as Record<string, unknown>;
-  let logo: { data: Buffer; width: number; height: number } | null = null;
-  if (typeof seller.logoUrl === "string") {
-    try { const url = new URL(seller.logoUrl); if (url.protocol === "https:" && url.hostname === "res.cloudinary.com") { const response = await fetch(url, { cache: "no-store", redirect: "error", signal: AbortSignal.timeout(5000) }); const length = Number(response.headers.get("content-length") ?? "0"); const type = response.headers.get("content-type") ?? ""; if (response.ok && length > 0 && length <= 2 * 1024 * 1024 && /^image\/(png|jpeg|webp)$/.test(type)) { const input = Buffer.from(await response.arrayBuffer()); if (input.length <= 2 * 1024 * 1024) { const result = await sharp(input).resize({ width: 120, height: 80, fit: "inside", withoutEnlargement: true }).flatten({ background: "#ffffff" }).jpeg({ quality: 82 }).toBuffer({ resolveWithObject: true }); logo = { data: result.data, width: result.info.width, height: result.info.height }; } } } } catch { logo = null; }
+  try {
+    const bytes = await renderHtmlPdf(renderInvoiceHtml(invoice));
+    if (!isValidInvoicePdf(bytes)) throw new Error("Chromium returned an incomplete PDF document.");
+    return bytes;
+  } catch (error) {
+    if (error instanceof InvoicePdfGenerationError) throw error;
+    throw new InvoicePdfGenerationError("Invoice PDF generation failed.", { cause: error });
   }
-  const pageContents: string[] = []; let ops: string[] = []; let y = 790;
-  const put = (x: number, yy: number, value: unknown, size = 9, bold = false) => ops.push(`BT /${bold ? "F2" : "F1"} ${size} Tf ${x} ${yy} Td (${printable(value)}) Tj ET`);
-  const line = (x1: number, y1: number, x2: number, y2: number) => ops.push(`${x1} ${y1} m ${x2} ${y2} l S`);
-  const beginPage = () => { ops = []; y = 790; const name = seller.legalBusinessName ?? seller.tradeName ?? "Nextra Wholesale"; if (logo) ops.push(`q 80 0 0 50 42 730 cm /Logo Do Q`); const companyX = logo ? 132 : 42; put(companyX, y, name, 17, true); y -= 17; put(companyX, y, seller.registeredAddress, 8); y -= 12; put(companyX, y, `GSTIN: ${seller.gstin ?? ""}    PAN: ${seller.pan ?? ""}`, 8); y -= 12; put(companyX, y, `Phone: ${seller.contactNumber ?? ""}    Email: ${seller.officialEmail ?? ""}`, 8); put(420, 770, "TAX INVOICE", 16, true); put(420, 751, `Invoice: ${invoice.invoiceNumber ?? "DRAFT"}`, 8); put(420, 737, `Date: ${invoice.invoiceDate?.toISOString().slice(0, 10) ?? ""}`, 8); put(420, 723, `Due: ${invoice.dueDate?.toISOString().slice(0, 10) ?? "-"}`, 8); y -= 10; line(42, y, 553, y); y -= 18; put(42, y, "BILL TO", 9, true); put(310, y, "SHIP TO", 9, true); y -= 14; put(42, y, buyer.businessName ?? buyer.legalName ?? "", 9, true); put(310, y, shipping.address ?? "", 9); y -= 13; put(42, y, buyer.buyerName ?? "", 8); put(310, y, `${shipping.city ?? ""} ${shipping.state ?? ""} ${shipping.pincode ?? ""}`, 8); y -= 12; put(42, y, buyer.billingAddress ?? "", 8); put(310, y, `Place of supply: ${invoice.placeOfSupply ?? ""}`, 8); y -= 12; put(42, y, `GSTIN: ${buyer.gstin ?? "-"}   ${buyer.state ?? ""} ${buyer.pincode ?? ""}`, 8); put(310, y, `State code: ${invoice.stateCode ?? ""}`, 8); y -= 14; put(42, y, `Order: ${invoice.salesOrder.orderNumber}   Dispatch: ${invoice.dispatch.reference}`, 8); y -= 18; tableHeader(); };
-  const tableHeader = () => { line(42, y + 10, 580, y + 10); put(42, y, "#", 6, true); put(58, y, "Product / SKU", 6, true); put(208, y, "HSN", 6, true); put(241, y, "Qty/UOM", 6, true); put(275, y, "Rate", 6, true); put(315, y, "Disc.", 6, true); put(355, y, "Taxable", 6, true); put(397, y, "CGST", 6, true); put(434, y, "SGST", 6, true); put(471, y, "IGST", 6, true); put(508, y, "Cess", 6, true); put(545, y, "Total", 6, true); y -= 9; line(42, y, 580, y); y -= 13; };
-  const finishPage = () => { line(42, 40, 553, 40); put(42, 26, `${seller.footerNotes ?? ""}`.slice(0, 100), 7); pageContents.push(ops.join("\n")); };
-  beginPage();
-  for (const [index, item] of invoice.items.entries()) {
-    const desc = [...wrap(`${item.productName}${item.description ? ` / ${item.description}` : ""}`, 25).slice(0, 2), `SKU: ${item.sku} · GST ${Number(item.gstRateSnapshot).toFixed(2)}%`]; const height = Math.max(28, desc.length * 9 + 10);
-    if (y - height < 95) { finishPage(); beginPage(); }
-    put(42, y, index + 1, 6); desc.forEach((part, i) => put(58, y - i * 9, part, 6));
-    put(208, y, item.hsnSacCode, 6); put(241, y, `${item.quantity}/${item.uom}`, 6); put(275, y, Number(item.unitPrice).toFixed(2), 6); put(315, y, Number(item.lineDiscount).toFixed(2), 6); put(355, y, Number(item.taxableValue).toFixed(2), 6); put(397, y, Number(item.cgstAmount).toFixed(2), 6); put(434, y, Number(item.sgstAmount).toFixed(2), 6); put(471, y, Number(item.igstAmount).toFixed(2), 6); put(508, y, Number(item.cessAmount).toFixed(2), 6); put(545, y, Number(item.lineTotal).toFixed(2), 6); y -= height; line(42, y + 4, 580, y + 4);
-  }
-  if (y < 255) { finishPage(); beginPage(); }
-  y -= 10; put(365, y, `Taxable subtotal: ${money(invoice.taxableSubtotal)}`, 8); y -= 13; put(365, y, `CGST: ${money(invoice.cgstTotal)}   SGST: ${money(invoice.sgstTotal)}`, 8); y -= 13; put(365, y, `IGST: ${money(invoice.igstTotal)}   Cess: ${money(invoice.cessTotal)}`, 8); y -= 13; put(365, y, `Freight / packing / other: ${money(invoice.freightTotal)} / ${money(invoice.packingTotal)} / ${money(invoice.otherChargesTotal)}`, 8); y -= 13; put(365, y, `Discount: ${money(invoice.discountTotal)}   Round-off: ${money(invoice.roundOff)}`, 8); y -= 18; put(365, y, `GRAND TOTAL: ${money(invoice.grandTotal)}`, 12, true); y -= 24; put(42, y, `Financial year: ${invoice.financialYear?.name ?? ""}   Place of supply: ${invoice.placeOfSupply ?? ""}   State code: ${invoice.stateCode ?? ""}`, 8); y -= 13; put(42, y, `Reverse charge: ${invoice.reverseCharge ? "Yes" : "No"}`, 8); y -= 13; put(42, y, `Bank details: ${seller.bankDetails ?? ""}`, 8); y -= 13; wrap(seller.termsAndConditions, 95).slice(0, 2).forEach((term, index) => put(42, y - index * 9, term, 7)); y -= 20; put(390, y, "Authorised Signatory", 8, true); y -= 20; put(390, y, seller.legalBusinessName ?? "", 8); finishPage();
-  pageContents.forEach((content, index) => { pageContents[index] = `${content}\nBT /F1 7 Tf 510 25 Td (Page ${index + 1} of ${pageContents.length}) Tj ET`; });
-  const objects: string[] = []; const add = (s: string) => { objects.push(s); return objects.length; };
-  const catalogId = add(""); const pagesId = add(""); const fontId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"); const boldId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>"); const logoId = logo ? add(`<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logo.data.length} >>\nstream\n${logo.data.toString("latin1")}\nendstream`) : null; const pageIds: number[] = [];
-  pageContents.forEach(content => { const stream = Buffer.from(content, "latin1"); const contentId = add(`<< /Length ${stream.length} >>\nstream\n${stream.toString("latin1")}\nendstream`); const xobjects = logoId ? `/XObject << /Logo ${logoId} 0 R >>` : ""; const pageId = add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${fontId} 0 R /F2 ${boldId} 0 R >> ${xobjects} >> /Contents ${contentId} 0 R >>`); pageIds.push(pageId); });
-  objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`; objects[pagesId - 1] = `<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`;
-  let pdf = "%PDF-1.4\n%NEXTRA\n"; const offsets = [0]; objects.forEach((obj, i) => { offsets.push(Buffer.byteLength(pdf, "latin1")); pdf += `${i + 1} 0 obj\n${obj}\nendobj\n`; }); const xref = Buffer.byteLength(pdf, "latin1"); pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`; offsets.slice(1).forEach(offset => pdf += `${String(offset).padStart(10, "0")} 00000 n \n`); pdf += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF`;
-  return Buffer.from(pdf, "latin1");
 }

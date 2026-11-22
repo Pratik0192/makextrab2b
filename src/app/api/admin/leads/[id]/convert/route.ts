@@ -22,7 +22,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       for (const [kind, label] of [["BUSINESS_DETAILS", "Business details"], ["CONTACT_DETAILS", "Contact details"], ["BUSINESS_LEGITIMACY", "Business legitimacy"]] as const) if (checks.get(kind) !== "VERIFIED") missing.push(`${label} verification must be VERIFIED.`);
       for (const check of lead.verificationChecks) if (check.status !== "VERIFIED" && check.status !== "NOT_APPLICABLE") missing.push(`${check.checkType.replaceAll("_", " ")} must be VERIFIED or NOT APPLICABLE.`);
       const text = (key: string, original: string | null | undefined) => typeof overrides[key] === "string" ? String(overrides[key]).trim() : original ?? "";
-      const businessName=text("businessName",lead.businessName), buyerName=text("buyerName",lead.buyerName), mobile=text("mobile",lead.mobile), email=text("email",lead.email), city=text("city",lead.city), state=text("state",lead.state), pincode=text("pincode",lead.pincode);
+      const businessName=text("businessName",lead.businessName), buyerName=text("buyerName",lead.buyerName), mobile=text("mobile",lead.mobile), email=text("email",lead.email), city=text("city",lead.city), state=text("state",lead.state), pincode=text("pincode",lead.pincode), businessAddress=text("businessAddress",lead.businessAddress), deliveryAddress=text("deliveryAddress",lead.deliveryAddress), deliveryCity=text("deliveryCity",lead.deliveryCity), deliveryState=text("deliveryState",lead.deliveryState), deliveryPincode=text("deliveryPincode",lead.deliveryPincode);
       if (!businessName) missing.push("Business name is required.");
       if (!buyerName) missing.push("Buyer name is required.");
       if (!mobile) missing.push("Mobile number is required.");
@@ -30,15 +30,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const gstin=text("gstin",lead.gstin).toUpperCase();
       if (gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/.test(gstin)) missing.push("GSTIN must be a valid 15-character GSTIN or left blank.");
       if (!city || !state || !pincode) missing.push("City, state and pincode are required.");
+      if (!businessAddress) missing.push("Billing address is required.");
+      if (!deliveryAddress || !deliveryCity || !deliveryState || !deliveryPincode) missing.push("Complete shipping address, city, state and postal code are required.");
       if (missing.length) throw new Error(missing.join(" "));
-      const customerCode = await nextReference("customer_code_seq", "NXT-CUST");
+      const customerCode = await nextReference("customer_code_seq", "MXT-CUST");
       const customer = await tx.customer.create({ data: {
         customerCode, businessName, businessType: lead.businessType, buyerName,
         mobile, whatsappNumber: text("whatsappNumber",lead.whatsappNumber)||null, email, gstin: gstin||null,
-        website: lead.website, socialMediaUrl: lead.socialMediaUrl, businessAddress: lead.businessAddress,
+        website: lead.website, socialMediaUrl: lead.socialMediaUrl, businessAddress,
         city, state, pincode, country: text("country",lead.country)||"India",
         preferredContactMethod: lead.preferredContactMethod, preferredPaymentMode: lead.preferredPaymentMode,
-        deliveryAddress: lead.deliveryAddress, assignedSalesExecutiveId: lead.assignedToId,
+        deliveryAddress, deliveryCity, deliveryState, deliveryPincode,
+        deliveryContactName: text("deliveryContactName", lead.deliveryContactName) || buyerName,
+        deliveryContactPhone: text("deliveryContactPhone", lead.deliveryContactPhone) || mobile,
+        assignedSalesExecutiveId: lead.assignedToId,
         convertedFromLeadId: lead.id, convertedById: user.id,
       } });
       const changed = await tx.lead.updateMany({ where: { id, stage: "QUALIFIED", mergedIntoLeadId: null }, data: { stage: "CONVERTED" } });

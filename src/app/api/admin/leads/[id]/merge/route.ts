@@ -4,8 +4,7 @@ import { apiError, apiSuccess } from "@/lib/api-response";
 import { isAuthFailure, requireSuperAdmin } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 
-const mergeFields = ["businessName", "businessType", "gstin", "website", "socialMediaUrl", "buyerName", "mobile", "whatsappNumber", "email", "preferredContactMethod", "city", "state", "pincode", "country", "businessAddress", "deliveryAddress", "notes", "estimatedTotalQuantity", "estimatedOrderValue", "preferredPaymentMode"] as const;
-type MergeField = (typeof mergeFields)[number];
+const mergeFields = ["businessName", "businessType", "gstin", "website", "socialMediaUrl", "buyerName", "mobile", "whatsappNumber", "email", "preferredContactMethod", "city", "state", "pincode", "country", "businessAddress", "deliveryAddress", "deliveryCity", "deliveryState", "deliveryPincode", "deliveryContactName", "deliveryContactPhone", "notes", "estimatedTotalQuantity", "estimatedOrderValue", "preferredPaymentMode"] as const;
 const isEmpty = (value: unknown) => value === null || value === undefined || value === "";
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {

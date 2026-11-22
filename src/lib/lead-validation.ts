@@ -23,6 +23,11 @@ export interface ParsedLeadSubmission {
   pincode: string;
   country: string;
   businessAddress: string | null;
+  deliveryCity: string;
+  deliveryState: string;
+  deliveryPincode: string;
+  deliveryContactName: string | null;
+  deliveryContactPhone: string | null;
   estimatedOrderValue: string | null;
   preferredPaymentMode: LeadPaymentMode | null;
   deliveryAddress: string | null;
@@ -94,14 +99,24 @@ export function parseLeadSubmission(value: unknown): LeadValidationResult {
     if (!valid) errors.pincode = country.toLowerCase() === "india" ? "Enter a valid 6-digit Indian PIN code." : "Enter a valid postal code.";
   }
 
-  const businessAddress = getOptionalText("businessAddress", "Business address", 500);
+  const businessAddress = getText("businessAddress", "Billing address", 500, true);
   const estimatedOrderValue = parseOrderValue(input.estimatedOrderValue, errors);
   const paymentValue = input.preferredPaymentMode;
   let preferredPaymentMode: LeadPaymentMode | null = null;
   if (paymentValue !== undefined && paymentValue !== null && paymentValue !== "") {
     preferredPaymentMode = getEnum("preferredPaymentMode", "preferred payment mode", PAYMENT_MODES);
   }
-  const deliveryAddress = getOptionalText("deliveryAddress", "Delivery address", 500);
+  const deliveryAddress = getText("deliveryAddress", "Shipping address", 500, true);
+  const deliveryCity = getText("deliveryCity", "Shipping city", 100, true);
+  const deliveryState = getText("deliveryState", "Shipping state", 100, true);
+  const deliveryPincodeRaw = getText("deliveryPincode", "Shipping postal code", 16, true);
+  const deliveryPincode = deliveryPincodeRaw.replace(/[\s-]/g, "").toUpperCase();
+  if (deliveryPincode) {
+    const valid = country.toLowerCase() === "india" ? /^[1-9][0-9]{5}$/.test(deliveryPincode) : /^[A-Z0-9][A-Z0-9 -]{1,13}[A-Z0-9]$/.test(deliveryPincode);
+    if (!valid) errors.deliveryPincode = country.toLowerCase() === "india" ? "Enter a valid 6-digit Indian shipping PIN code." : "Enter a valid shipping postal code.";
+  }
+  const deliveryContactName = getOptionalText("deliveryContactName", "Shipping contact person", 160);
+  const deliveryContactPhone = normalizePhone(input.deliveryContactPhone, "deliveryContactPhone", "Shipping contact phone", errors, false);
   const notes = getOptionalText("notes", "Additional notes", 2000);
 
   const idempotencyKeyRaw = input.idempotencyKey;
@@ -161,6 +176,11 @@ export function parseLeadSubmission(value: unknown): LeadValidationResult {
       pincode,
       country,
       businessAddress,
+      deliveryCity,
+      deliveryState,
+      deliveryPincode,
+      deliveryContactName,
+      deliveryContactPhone,
       estimatedOrderValue,
       preferredPaymentMode,
       deliveryAddress,

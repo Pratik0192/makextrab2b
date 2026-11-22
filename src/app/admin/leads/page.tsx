@@ -9,6 +9,7 @@ import { getAdminLeads } from "@/services/lead.service";
 import { apiErrorMessage } from "@/services/service-utils";
 import type { Pagination } from "@/types/api";
 import type { LeadListItem, LeadSource, LeadStage } from "@/types/lead";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 const sources: LeadSource[] = [
   "WEBSITE",
@@ -57,6 +58,7 @@ export default function AdminLeadsPage({
     totalPages: 0,
   });
   const [page, setPage] = useState(1);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [source, setSource] = useState<LeadSource | "">("");
   const [stage, setStage] = useState<LeadStage | "">("");
@@ -183,6 +185,7 @@ export default function AdminLeadsPage({
     }
   }, [
     page,
+    pageSize,
     search,
     source,
     stage,
@@ -342,7 +345,7 @@ export default function AdminLeadsPage({
     followUpTo,
     duplicateStatus,
   ]);
-  async function runBulk() {
+  function runBulk() {
     if (
       !selected.length ||
       (!bulkValue &&
@@ -351,12 +354,10 @@ export default function AdminLeadsPage({
       (!bulkTag && ["ADD_TAGS", "REMOVE_TAGS"].includes(bulkOperation))
     )
       return;
-    if (
-      !window.confirm(
-        `Apply ${bulkOperation.toLowerCase()} to ${selected.length} selected leads?`,
-      )
-    )
-      return;
+    setBulkConfirmOpen(true);
+  }
+  async function performBulk() {
+    setBulkConfirmOpen(false);
     try {
       const field =
         bulkOperation === "ASSIGN"
@@ -393,6 +394,7 @@ export default function AdminLeadsPage({
   }
   return (
     <div className="mx-auto max-w-[1500px] space-y-5">
+      <ConfirmDialog open={bulkConfirmOpen} onOpenChange={setBulkConfirmOpen} title="Apply bulk action?" description={`Apply ${bulkOperation.toLowerCase()} to ${selected.length} selected leads?`} confirmText="Apply action" onConfirm={performBulk} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[.18em] text-[#9a7547]">
@@ -415,7 +417,7 @@ export default function AdminLeadsPage({
 
       <section
         aria-label="Lead filters"
-        className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_180px_160px_160px_160px_auto]"
+        className="grid gap-3 rounded-lg border border-[#F3DCE7] shadow-[0_4px_14px_rgba(131,24,67,0.14)] bg-white  p-4 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_180px_160px_160px_160px_auto]"
       >
         <label className="flex h-10 items-center gap-2 rounded-md border border-slate-200 px-3">
           <Search size={15} className="shrink-0 text-slate-400" />
@@ -509,7 +511,7 @@ export default function AdminLeadsPage({
         </button>
       </section>
 
-      <details className="rounded-lg border border-slate-200 bg-white p-4" open>
+      <details className="rounded-lg border border-[#F3DCE7] shadow-[0_4px_14px_rgba(131,24,67,0.14)] bg-white p-4" open>
         <summary className="cursor-pointer text-sm font-medium text-slate-700">
           More filters and sorting{" "}
           {activeFilterCount > 0 && (
@@ -715,7 +717,7 @@ export default function AdminLeadsPage({
       </details>
 
       {basePath.startsWith("/admin") && (
-        <section className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs">
+        <section className="flex flex-wrap items-center gap-2 rounded-lg border border-[#F3DCE7] shadow-[0_4px_14px_rgba(131,24,67,0.14)] bg-white p-3 text-xs">
           <strong>{selected.length} selected</strong>
           <select
             value={bulkOperation}
@@ -772,7 +774,7 @@ export default function AdminLeadsPage({
             type="button"
             disabled={!selected.length}
             onClick={() => void runBulk()}
-            className="rounded bg-[#542d30] px-3 py-2 text-white disabled:opacity-40"
+            className="rounded bg-[#9D174D] px-3 py-2 text-white disabled:opacity-40"
           >
             Apply
           </button>
@@ -780,7 +782,7 @@ export default function AdminLeadsPage({
       )}
 
       {executives.length > 0 && (
-        <section className="flex flex-wrap gap-3 rounded-lg border border-slate-200 bg-white  p-4">
+        <section className="flex flex-wrap gap-3 rounded-lg border border-[#F3DCE7] shadow-[0_4px_14px_rgba(131,24,67,0.14)] bg-white  p-4">
           <select
             value={assignmentStatus}
             onChange={(e) => {
@@ -813,11 +815,11 @@ export default function AdminLeadsPage({
         </section>
       )}
 
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <section className="overflow-hidden rounded-lg border border-[#F3DCE7] shadow-[0_5px_18px_rgba(131,24,67,0.20)] bg-white">
         {error ? (
           <div
             role="alert"
-            className="m-5 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+            className="m-5 rounded-md border border-[#F3DCE7] shadow-[0_5px_18px_rgba(131,24,67,0.20)] bg-rose-50 p-4 text-sm text-rose-800"
           >
             <p>{error}</p>
             <button
@@ -829,317 +831,52 @@ export default function AdminLeadsPage({
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1320px] border-collapse text-left text-xs">
+          <div className="overflow-x-auto ">
+            <table className="w-full min-w-[760px] border-collapse text-left text-xs ">
               <thead className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500">
                 <tr>
-                  {basePath.startsWith("/admin") && (
-                    <th className="border-b px-3 py-3">
-                      <input
-                        aria-label="Select all leads on this page"
-                        type="checkbox"
-                        checked={
-                          items.length > 0 &&
-                          items.every((item) => selected.includes(item.id))
-                        }
-                        onChange={(e) =>
-                          setSelected((cur) => {
-                            const next = e.target.checked
-                              ? [
-                                  ...new Set([
-                                    ...cur,
-                                    ...items.map((i) => i.id),
-                                  ]),
-                                ]
-                              : cur.filter(
-                                  (id) => !items.some((i) => i.id === id),
-                                );
-                            if (next.length > 100) {
-                              toast.error(
-                                "Bulk actions are limited to 100 leads.",
-                              );
-                              return cur;
-                            }
-                            return next;
-                          })
-                        }
-                      />
-                    </th>
-                  )}
-                  {[
-                    "Lead reference",
-                    "Business name",
-                    "Buyer",
-                    "Mobile",
-                    "Email",
-                    "City / state",
-                    "Source",
-                    "Priority",
-                    "Interested products",
-                    "Requested qty",
-                    "Stage",
-                    "Sales Executive",
-                    "Next follow-up",
-                    "Last contact",
-                    "Created",
-                    "Tags",
-                    "Lead age",
-                    "Duplicates",
-                    "Actions",
-                  ].map((heading) => (
-                    <th
-                      key={heading}
-                      scope="col"
-                      className="border-b border-slate-200 px-3 py-3 font-semibold"
-                    >
-                      {heading}
+                  {["Lead Reference", "Business Name", "City / State", "Priority", "Stage", "Created", "Actions"].map((heading) => (
+                    <th key={heading} scope="col" className="border-b border-slate-200 px-3 py-3 font-semibold">
+                      <span className="inline-flex items-center gap-2">{heading}{heading === "Actions" && basePath.startsWith("/admin") && <input aria-label="Select all leads on this page" type="checkbox" checked={items.length > 0 && items.every((item) => selected.includes(item.id))} onChange={(e) => setSelected((cur) => {
+                        const next = e.target.checked ? [...new Set([...cur, ...items.map((item) => item.id)])] : cur.filter((id) => !items.some((item) => item.id === id));
+                        if (next.length > 100) { toast.error("Bulk actions are limited to 100 leads."); return cur; }
+                        return next;
+                      })} />}</span>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
-                  <tr>
-                    <td
-                      colSpan={basePath.startsWith("/admin") ? 20 : 19}
-                      className="h-48 text-center text-slate-500"
-                    >
-                      <LoaderCircle
-                        className="mr-2 inline animate-spin"
-                        size={16}
-                      />
-                      Loading leads…
-                    </td>
-                  </tr>
+                  <tr><td colSpan={7} className="h-48 text-center text-slate-500"><LoaderCircle className="mr-2 inline animate-spin" size={16} />Loading leads…</td></tr>
                 ) : items.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={basePath.startsWith("/admin") ? 20 : 19}
-                      className="py-16 text-center"
-                    >
-                      <p className="font-serif text-xl text-slate-700">
-                        No leads found
-                      </p>
-                      <p className="mt-2 text-xs text-slate-500">
-                        New website enquiries will appear here.
-                      </p>
-                      {hasFilters && (
-                        <button
-                          type="button"
-                          onClick={clearFilters}
-                          className="mt-3 text-xs font-medium text-[#9D174D] underline"
-                        >
-                          Clear filters
-                        </button>
-                      )}
+                  <tr><td colSpan={7} className="py-16 text-center"><p className="font-serif text-xl text-slate-700">No leads found</p><p className="mt-2 text-xs text-slate-500">New website enquiries will appear here.</p>{hasFilters && <button type="button" onClick={clearFilters} className="mt-3 text-xs font-medium text-[#9D174D] underline">Clear filters</button>}</td></tr>
+                ) : items.map((lead) => (
+                  <tr key={lead.id} className="align-middle hover:bg-[#fcfaf8]">
+                    <td className="whitespace-nowrap px-3 py-3 font-semibold text-[#9D174D]">{lead.referenceNumber}</td>
+                    <td className="max-w-64 px-3 py-3"><p className="truncate font-medium text-slate-800" title={lead.businessName}>{lead.businessName}</p></td>
+                    <td className="whitespace-nowrap px-3 py-3">{lead.city}<span className="block text-[10px] text-slate-400">{lead.state}</span></td>
+                    <td className="whitespace-nowrap px-3 py-3"><span className="rounded-full bg-violet-50 px-2 py-1 text-[10px]">{labelFor(lead.priority)}</span></td>
+                    <td className="whitespace-nowrap px-3 py-3"><span className={`rounded-full px-2 py-1 text-[10px] font-medium ${lead.stage === "NEW" ? "bg-sky-50 text-sky-700" : lead.stage === "QUALIFIED" ? "bg-emerald-50 text-emerald-700" : lead.stage === "LOST" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}>{labelFor(lead.stage)}</span></td>
+                    <td className="whitespace-nowrap px-3 py-3 text-slate-500">{dateLabel(lead.createdAt)}</td>
+                    <td className="px-3 py-3">
+                      <div className="flex min-w-36 flex-wrap items-center gap-2">
+                        {basePath.startsWith("/admin") && <input aria-label={`Select ${lead.referenceNumber}`} type="checkbox" checked={selected.includes(lead.id)} onChange={(e) => setSelected((cur) => {
+                          if (e.target.checked && cur.length >= 100) { toast.error("Bulk actions are limited to 100 leads."); return cur; }
+                          return e.target.checked ? [...cur, lead.id] : cur.filter((id) => id !== lead.id);
+                        })} />}
+                        <Link href={`${basePath}/${lead.id}`} className="inline-flex items-center gap-1 font-medium text-[#9D174D] hover:underline">View <ArrowRight size={13} /></Link>
+                        {executives.length > 0 && <select aria-label={`Assign ${lead.referenceNumber}`} className="max-w-32 rounded border px-2 py-1 text-[10px] bg-white" value={lead.assignedTo?.id ?? ""} onChange={async (e) => {
+                          const assignedToId = e.target.value;
+                          if (!assignedToId) return;
+                          try { await api.patch(`/api/admin/leads/${lead.id}/assign`, { assignedToId }); toast.success("Lead assigned."); void load(); }
+                          catch { toast.error("Assignment failed."); }
+                        }}><option value="">{lead.assignedTo ? `${lead.assignedTo.firstName} ${lead.assignedTo.lastName}` : "Assign…"}</option>{executives.map((u) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}</select>}
+                        {[...(lead.duplicateMatchesAsA ?? []), ...(lead.duplicateMatchesAsB ?? [])].some((m) => m.status !== "DISMISSED") && <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] text-amber-800">Possible duplicate</span>}
+                      </div>
                     </td>
                   </tr>
-                ) : (
-                  items.map((lead) => {
-                    const totalQuantity = lead.leadProducts.reduce(
-                      (sum, item) => sum + item.requestedQuantity,
-                      0,
-                    );
-                    return (
-                      <tr
-                        key={lead.id}
-                        className="align-top hover:bg-[#fcfaf8]"
-                      >
-                        {basePath.startsWith("/admin") && (
-                          <td className="px-3 py-3">
-                            <input
-                              aria-label={`Select ${lead.referenceNumber}`}
-                              type="checkbox"
-                              checked={selected.includes(lead.id)}
-                              onChange={(e) =>
-                                setSelected((cur) => {
-                                  if (e.target.checked && cur.length >= 100) {
-                                    toast.error(
-                                      "Bulk actions are limited to 100 leads.",
-                                    );
-                                    return cur;
-                                  }
-                                  return e.target.checked
-                                    ? [...cur, lead.id]
-                                    : cur.filter((id) => id !== lead.id);
-                                })
-                              }
-                            />
-                          </td>
-                        )}
-                        <td className="whitespace-nowrap px-3 py-3 font-semibold text-[#9D174D]">
-                          {lead.referenceNumber}
-                        </td>
-                        <td className="max-w-48 px-3 py-3">
-                          <p className="font-medium text-slate-800">
-                            {lead.businessName}
-                          </p>
-                        </td>
-                        <td className="px-3 py-3">{lead.buyerName}</td>
-                        <td className="whitespace-nowrap px-3 py-3">
-                          {lead.mobile}
-                        </td>
-                        <td
-                          className="max-w-48 truncate px-3 py-3"
-                          title={lead.email}
-                        >
-                          {lead.email}
-                        </td>
-                        <td className="px-3 py-3">
-                          {lead.city}
-                          <span className="block text-[10px] text-slate-400">
-                            {lead.state}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-600">
-                            {labelFor(lead.source)}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className="rounded-full bg-violet-50 px-2 py-1 text-[10px]">
-                            {labelFor(lead.priority)}
-                          </span>
-                        </td>
-                        <td className="max-w-48 px-3 py-3">
-                          {lead.leadProducts.length ? (
-                            <>
-                              {lead.leadProducts.slice(0, 2).map((item) => (
-                                <p
-                                  key={`${item.skuSnapshot}:${item.productNameSnapshot}`}
-                                  className="truncate"
-                                  title={`${item.productNameSnapshot} · ${item.skuSnapshot}`}
-                                >
-                                  {item.productNameSnapshot}
-                                </p>
-                              ))}
-                              {lead.leadProducts.length > 2 && (
-                                <p className="text-[10px] text-slate-400">
-                                  +{lead.leadProducts.length - 2} more
-                                </p>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-slate-400">
-                              General enquiry
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-3 py-3">
-                          {totalQuantity
-                            ? totalQuantity.toLocaleString("en-IN")
-                            : "—"}
-                        </td>
-                        <td className="px-3 py-3">
-                          <span
-                            className={`rounded-full px-2 py-1 text-[10px] font-medium ${lead.stage === "NEW" ? "bg-sky-50 text-sky-700" : lead.stage === "QUALIFIED" ? "bg-emerald-50 text-emerald-700" : lead.stage === "LOST" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}
-                          >
-                            {labelFor(lead.stage)}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          {lead.assignedTo
-                            ? `${lead.assignedTo.firstName} ${lead.assignedTo.lastName}`
-                            : "Unassigned"}
-                          {executives.length > 0 && (
-                            <select
-                              aria-label="Assign Sales Executive"
-                              className="mt-2 block max-w-40 rounded border px-2 py-1 text-[10px] bg-white"
-                              value={lead.assignedTo?.id ?? ""}
-                              onChange={async (e) => {
-                                const selected = e.target.value;
-                                if (!selected) return;
-                                try {
-                                  await api.patch(
-                                    `/api/admin/leads/${lead.id}/assign`,
-                                    { assignedToId: selected },
-                                  );
-                                  toast.success("Lead assigned.");
-                                  void load();
-                                } catch {
-                                  toast.error("Assignment failed.");
-                                }
-                              }}
-                            >
-                              <option value="">Assign…</option>
-                              {executives.map((u) => (
-                                <option key={u.id} value={u.id}>
-                                  {u.firstName} {u.lastName}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 text-slate-500">
-                          {lead.followUps?.[0] ? (
-                            <>
-                              <span
-                                className={`mr-1 rounded px-1 ${new Date(lead.followUps[0].dueAt) < new Date() ? "bg-rose-100 text-rose-700" : new Date(lead.followUps[0].dueAt).toDateString() === new Date().toDateString() ? "bg-amber-100 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}
-                              >
-                                {new Date(lead.followUps[0].dueAt) < new Date()
-                                  ? "Overdue"
-                                  : new Date(
-                                        lead.followUps[0].dueAt,
-                                      ).toDateString() ===
-                                      new Date().toDateString()
-                                    ? "Today"
-                                    : "Upcoming"}
-                              </span>
-                              {dateLabel(lead.followUps[0].dueAt)}
-                            </>
-                          ) : (
-                            <span>No follow-up</span>
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 text-slate-500">
-                          {lead.lastContactAt
-                            ? dateLabel(lead.lastContactAt)
-                            : "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 text-slate-500">
-                          {dateLabel(lead.createdAt)}
-                        </td>
-                        <td className="px-3 py-3 text-slate-500">
-                          {lead.leadTags?.map((t) => (
-                            <span
-                              key={t.tag.id}
-                              className="mr-1 inline-block rounded-full bg-slate-100 px-2 py-1"
-                            >
-                              {t.tag.name}
-                            </span>
-                          ))}
-                        </td>
-                        <td className="px-3 py-3 text-slate-500">
-                          {Math.floor(
-                            (Date.now() - new Date(lead.createdAt).getTime()) /
-                              86400000,
-                          )}
-                          d
-                        </td>
-                        <td className="px-3 py-3">
-                          {[
-                            ...(lead.duplicateMatchesAsA ?? []),
-                            ...(lead.duplicateMatchesAsB ?? []),
-                          ].some((m) => m.status !== "DISMISSED") ? (
-                            <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] text-amber-800">
-                              Possible duplicate
-                            </span>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td className="px-3 py-3">
-                          <Link
-                            href={`${basePath}/${lead.id}`}
-                            className="inline-flex items-center gap-1 font-medium text-[#9D174D] hover:underline"
-                          >
-                            View <ArrowRight size={13} />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
+                ))}
               </tbody>
             </table>
           </div>

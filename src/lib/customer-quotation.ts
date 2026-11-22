@@ -1,7 +1,7 @@
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 
-export async function nextReference(sequence: "customer_code_seq" | "quotation_number_seq", prefix: "NXT-CUST" | "NXT-QTN") {
+export async function nextReference(sequence: "customer_code_seq" | "quotation_number_seq", prefix: "MXT-CUST" | "MXT-QTN") {
   const rows = await prisma.$queryRaw<Array<{ value: bigint }>>`SELECT nextval(${sequence}::regclass) AS value`;
   return `${prefix}-${rows[0].value.toString().padStart(6, "0")}`;
 }
