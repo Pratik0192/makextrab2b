@@ -785,7 +785,7 @@ export default function ProductsPage() {
                   className={inputClass + (wholesalePriceError ? " border-rose-500" : "")}
                 />
                 <span id="wholesale-price-help" className="mt-1 block text-[10px] leading-4 text-slate-500">
-                  This is the wholesale selling price for one piece. It will be used as the default price when creating quotations. It will not be displayed on the public storefront.
+                  This is the wholesale selling price for one piece. It will be used as the default price when creating sales orders. It will not be displayed on the public storefront.
                 </span>
                 {wholesalePriceError && <span id="wholesale-price-error" role="alert" className="mt-1 block text-xs text-rose-700">{wholesalePriceError}</span>}
               </label>

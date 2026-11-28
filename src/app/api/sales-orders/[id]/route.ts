@@ -10,7 +10,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     where: { id },
     include: {
       customer: { select: { customerCode: true, businessName: true, buyerName: true, mobile: true, email: true, assignedSalesExecutiveId: true, businessAddress: true, city: true, state: true, pincode: true, country: true, deliveryAddress: true, deliveryCity: true, deliveryState: true, deliveryPincode: true, deliveryContactName: true, deliveryContactPhone: true } },
-      quotation: { select: { quotationNumber: true, acceptedAt: true } },
       assignedSalesExecutive: { select: { firstName: true, lastName: true } },
       items: { include: { product: { select: { id: true, name: true, sku: true } } } },
       reservations: { include: { warehouse: { select: { name: true, code: true } }, product: { select: { name: true, sku: true } } }, orderBy: { createdAt: "desc" } },

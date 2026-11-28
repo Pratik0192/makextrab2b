@@ -7,7 +7,7 @@
 - Public buyers use `/` (storefront) and do not need an account to send a wholesale enquiry.
 - Staff use `/login`. Successful `SUPER_ADMIN` sessions route to `/admin`; `SALES_EXECUTIVE` sessions route to `/sales`. Authentication is cookie/session based.
 - Super Admin has the admin navigation and is required for executive creation/assignment, catalogue and inventory configuration, order approval/reservation, billing configuration and invoice/credit note issuance.
-- Sales Executive has a restricted workspace. Lead APIs enforce ownership; quotation, order, warehouse and invoice APIs enforce the access policy they implement. A hidden button is not the only protection: restricted API actions return an authorization error.
+- Sales Executive has a restricted workspace. Lead, order, warehouse and invoice APIs enforce the access policy they implement. A hidden button is not the only protection: restricted API actions return an authorization error.
 - The schema defines other roles (`SALES_MANAGER`, `ACCOUNTS`, `INVENTORY`, `PURCHASE`, `HR_MANAGER`, `POS_CASHIER`, `EMPLOYEE`, `CUSTOMER`) but the current authenticated UI/navigation is for Super Admin and Sales Executive. Do not infer access for the other roles.
 
 ## 2. End-to-end workflow at a glance
@@ -16,7 +16,7 @@
 2. Buyer browses the public storefront and submits **Wholesale enquiry** with contact/privacy consents. The application creates a website lead; attached GST certificate is optional.
 3. Super Admin reviews the lead in `/admin/leads`, reviews any secure document, records verification, sets priority/tags/stage, makes follow-ups and assigns an executive.
 4. Executive signs in, works only assigned leads, records calls/notes/follow-ups, and progresses verification. Super Admin or the executive with ownership can convert an eligible lead to a Customer after checking/correcting conversion fields.
-5. Executive (or Super Admin) opens customer and creates a quotation using active products with configured wholesale price. Executive uses catalogue price; Super Admin may override. Mark Sent, record buyer acceptance, then convert accepted quotation to a Sales Order.
+5. Executive (or Super Admin) opens an active customer and creates a Sales Order directly using active products with configured wholesale price. Executive uses catalogue price; Super Admin may override. The order starts as a draft and is submitted for approval.
 6. Super Admin reviews order, chooses a warehouse, checks availability, and confirms. Confirmation reserves all required quantity atomically only if all lines are available; shortage means no partial reservation.
 7. Warehouse operator (Super Admin or authorized assigned executive per warehouse endpoints) creates picking list, starts it, records picked amounts, completes, records package quantities and completes packing, then creates and confirms dispatch. Delivery events are updated against each dispatch.
 8. Dispatch completion does **not** create an invoice. Super Admin opens `/admin/invoices` or the dispatch from warehouse/order detail, previews eligible confirmed dispatch, enters tax treatment/place of supply/state code, creates draft, checks it and issues it. Issue allocates number and creates a private PDF snapshot.
@@ -80,11 +80,11 @@ Success shows a toast and reference number, then closes/resets the form. Validat
 
 ### Useful sidebar paths
 
-Admin groups: **Customer & Sales** (Leads `/admin/leads`, Lost Leads `/admin/leads/lost`, Sales Executives `/admin/sales-executives`, Customers `/admin/customers`, Quotations `/admin/quotations`, Sales Orders `/admin/orders`, Warehouse & Dispatch `/admin/warehouse/orders`); **Catalogue & Inventory** (Products `/admin/products`, Categories `/admin/categories`, Collections `/admin/collections`, Inventory `/admin/inventory`, Warehouses `/admin/warehouse`); **Purchasing & Billing** (Invoices `/admin/invoices`, Credit Notes `/admin/credit-notes`); **Administration** (Settings `/admin/settings`, Company Profile `/admin/settings/company`, GST Configuration `/admin/settings/gst`, HSN/SAC `/admin/settings/hsn`, Product Tax Mapping `/admin/settings/product-tax`, Financial Year & Numbering `/admin/settings/financial-year`, Charges & Rounding `/admin/settings/charges`).
+Admin groups: **Customer & Sales** (Leads `/admin/leads`, Lost Leads `/admin/leads/lost`, Sales Executives `/admin/sales-executives`, Customers `/admin/customers`, Sales Orders `/admin/orders`, Warehouse & Dispatch `/admin/warehouse/orders`); **Catalogue & Inventory** (Products `/admin/products`, Categories `/admin/categories`, Collections `/admin/collections`, Inventory `/admin/inventory`, Warehouses `/admin/warehouse`); **Purchasing & Billing** (Invoices `/admin/invoices`, Credit Notes `/admin/credit-notes`); **Administration** (Settings `/admin/settings`, Company Profile `/admin/settings/company`, GST Configuration `/admin/settings/gst`, HSN/SAC `/admin/settings/hsn`, Product Tax Mapping `/admin/settings/product-tax`, Financial Year & Numbering `/admin/settings/financial-year`, Charges & Rounding `/admin/settings/charges`).
 
 Sidebar labels for Suppliers, Purchase Orders, Goods Receipt, Payments, POS, HRMS, Attendance, Leave, Payroll, Expenses, Finance, Reports, Users & Access and Audit Logs exist but corresponding pages were not found in `src/app`; mark these **NOT IMPLEMENTED** despite the visible links.
 
-Sales sidebar: Dashboard `/sales`; My Leads `/sales/leads`; My Lost Leads `/sales/leads/lost`; My Customers `/sales/customers`; My Quotations `/sales/quotations`; My Orders `/sales/orders`; Warehouse & Dispatch `/sales/warehouse/orders`; Invoices & Balances `/sales/invoices`; Credit Notes `/sales/credit-notes`.
+Sales sidebar: Dashboard `/sales`; My Leads `/sales/leads`; My Lost Leads `/sales/leads/lost`; My Customers `/sales/customers`; My Orders `/sales/orders`; Warehouse & Dispatch `/sales/warehouse/orders`; Invoices & Balances `/sales/invoices`; Credit Notes `/sales/credit-notes`.
 
 ## 5. Lead management (CRM)
 
@@ -92,7 +92,7 @@ Sales sidebar: Dashboard `/sales`; My Leads `/sales/leads`; My Lost Leads `/sale
 
 - Super Admin: `/admin/leads`; Sales Executive: `/sales/leads` (owner-scoped). Open a row/reference to `/admin/leads/[id]` or `/sales/leads/[id]`.
 - Search business, buyer, phone, email or reference. Filters include source, priority, stage, created date/age, state, city, follow-up, tag, product interest, verification status, duplicate status, assigned/unassigned and executive; sort/direction and pagination are available. Admin also has bulk actions Assign, Priority, Stage, Add tag, Remove tag. Source options correspond to schema (`WEBSITE`, `WHATSAPP`, `MANUAL`, `PHONE`, `SOCIAL_CAMPAIGN`, `REFERRAL`, `WALK_IN`, `EXISTING_CUSTOMER`, `IMPORT`).
-- Lead stages in schema: `NEW`, `ASSIGNED`, `CONTACT_ATTEMPTED`, `CONTACTED`, `VERIFICATION_PENDING`, `QUALIFIED`, `QUOTATION_ORDER_DISCUSSION`, `CONVERTED`, `LOST`, `ON_HOLD`. Priorities: `LOW`, `MEDIUM`, legacy `NORMAL`, `HIGH`, `URGENT`. Lead list may label these in title case.
+- Lead stages in schema include `NEW`, `ASSIGNED`, `CONTACT_ATTEMPTED`, `CONTACTED`, `VERIFICATION_PENDING`, `QUALIFIED`, `CONVERTED`, `LOST`, and `ON_HOLD`. A legacy discussion stage remains only for existing historical leads and can be moved to `QUALIFIED`. Priorities: `LOW`, `MEDIUM`, legacy `NORMAL`, `HIGH`, `URGENT`.
 
 ### Lead details and available operation groups
 
@@ -114,13 +114,13 @@ Document access route is authenticated (`/api/admin/leads/[id]/documents/[docume
 
 At `/admin/sales-executives`, Super Admin enters **First name**, **Last name**, **Email**, **Mobile (optional)**. First/last names are max 80 characters and required; valid email required and unique. Creation makes an inactive `SALES_EXECUTIVE` plus random activation token with 24-hour expiry. Follow the displayed activation link; the executive sets a 12+ character password at `/setup-account?token=…`; then sign in at `/login`.
 
-Assign using Admin Leads list or lead detail. Reassignment is supported and logged. The executive workspace includes owned leads/lost leads, owned customers/quotations/orders, warehouse queue and invoice/credit-note read views. Direct URL access to another owner's lead/customer/order/invoice is checked by APIs; expect 403/404-style denial according to route. Invoice draft/create/issue, payments, reversal, cancellation and credit-note issue are Super Admin only.
+Assign using Admin Leads list or lead detail. Reassignment is supported and logged. The executive workspace includes owned leads/lost leads, owned customers and orders, warehouse queue and invoice/credit-note read views. Direct URL access to another owner's lead/customer/order/invoice is checked by APIs; expect 403/404-style denial according to route. Invoice draft/create/issue, payments, reversal, cancellation and credit-note issue are Super Admin only.
 
 ## 7. Customer Master and conversion
 
 There is no standalone create-customer form. Customer records are created by lead conversion. Admin route `/admin/customers`, sales route `/sales/customers`; search by code/business/buyer/phone, filter status, city, state, business type, conversion dates and executive, sort newest/oldest/business/code. Page sizes 10/20/50/100.
 
-Customer fields inherited from lead include customer code (generated), business name/type, buyer, mobile, optional WhatsApp, email, optional GSTIN/website/social, business address, city/state/PIN/country, preferred contact/payment, delivery address; status defaults `ACTIVE`, assignment follows lead. On detail, see overview, original lead, interests/documents/verification/activity, quotations and executive. Super Admin can edit customer via `/admin/customers/[id]/edit` and change `ACTIVE`, `INACTIVE`, `BLOCKED`; executive sees owned customers read-only and can create quotations. No customer-delete control.
+Customer fields inherited from lead include customer code (generated), business name/type, buyer, mobile, optional WhatsApp, email, optional GSTIN/website/social, business address, city/state/PIN/country, preferred contact/payment, delivery address; status defaults `ACTIVE`, assignment follows lead. On detail, see overview, original lead, interests/documents/verification/activity, sales order history and executive. Super Admin can edit customer via `/admin/customers/[id]/edit` and change `ACTIVE`, `INACTIVE`, `BLOCKED`; an assigned executive can create orders for an active customer. No customer-delete control.
 
 ## 8. Product, category, collection and warehouse setup
 
@@ -144,10 +144,10 @@ Super Admin `/admin/products`; search name/SKU, filters category, collection, ac
 | Pack size | No | Display/pack attribute. |
 | Display order | No | Ordering value. |
 | Short description, Full description | No | Storefront copy. |
-| Active, Featured, New arrival | Checkboxes | Inactive products cannot be newly selected in public/quotation form; featured/new flags affect storefront placement. |
+| Active, Featured, New arrival | Checkboxes | Inactive products cannot be newly selected in public/order form; featured/new flags affect storefront placement. |
 | Product images | Optional | JPG/PNG/WEBP, max 10 MB each, max 12 images; arrange order, designate primary, alt text. |
 
-Product tax is configured separately. Product form does not directly capture HSN/SAC. Use `/admin/settings/product-tax` after creating HSN/rate data. Public pages expose active product names, descriptions, attributes/images; quotation-only wholesale price is served to signed-in workspace. Product stock comes from Inventory, not the product form. Price history route: `/admin/products/[id]/price-history`.
+Product tax is configured separately. Product form does not directly capture HSN/SAC. Use `/admin/settings/product-tax` after creating HSN/rate data. Public pages expose active product names, descriptions, attributes/images; wholesale price is served to the signed-in order form. Product stock comes from Inventory, not the product form. Price history route: `/admin/products/[id]/price-history`.
 
 ### Warehouses and inventory
 
@@ -160,23 +160,15 @@ Super Admin `/admin/warehouse` creates/edits warehouse. Fields from schema/UI: n
 
 `available = quantityOnHand - quantityReserved - quantityBlocked`. The UI shows on-hand/reserved/blocked/available; blocked quantity has no standalone adjustment dialog documented here. Stock ledger records movements. Opening balances should be entered using Stock in before order approval.
 
-## 9. Quotations
+## 9. Sales orders and approval/reservation
 
-Routes: list `/admin/quotations` or `/sales/quotations`; create `/admin/quotations/create` or `/sales/quotations/create`; detail `…/quotations/[id]`; edit `…/quotations/[id]/edit`. Customer detail also has **Create quotation**. Current role scope is Super Admin and Sales Executive; executive access is ownership-limited.
-
-Create fields: Customer (select active assigned customer; inactive customer requires Super Admin confirmation checkbox), Valid until (date, today or future), at least one line with active Product, Quantity (integer; at/above product MOQ), Unit price / piece (auto-loaded wholesale price; read-only for executive, editable for Super Admin), Line discount (amount), overall discount type (`FIXED` or `PERCENT`), overall discount, Payment terms, Delivery terms, Customer notes, Internal notes. Remove/Add product line. New product lines load current wholesale price. Existing copied quotation lines retain their historical quote price. Taxes on the quotation are currently zero in the create screen; GST invoice is recalculated later from billing/product tax configuration. Do not treat quote totals as final tax invoice totals.
-
-Save draft generates quotation reference, snapshots names/SKUs/catalog prices and amounts. Detail shows item table, totals, customer, terms and revisions. Actions: **Edit draft**, **Mark sent**, **Record accepted**, **Record rejected** (reason), **Cancel** (reason), **Create revision**, **Print / Save PDF**, **Convert to Sales Order** (accepted only). Mark Sent is a recorded workflow state; no email delivery/share integration is present. Revision creates a new linked quotation. Validity date is captured; no automatic email expiry job is evidenced, so check status/expiry behavior before relying on automatic `EXPIRED` changes. Sales Order eligibility requires `ACCEPTED` quotation and duplicate conversion is prevented by unique relation.
-
-## 10. Sales orders and approval/reservation
-
-List `/admin/orders` / `/sales/orders`; detail `/admin/orders/[id]` / `/sales/orders/[id]`. Create through accepted quotation detail **Convert to Sales Order**. Order number is server-generated; customer/quotation/items/prices/discount/totals are copied snapshots. The order captures delivery address, instructions and notes from conversion/available data; order items are not an independent freeform create form.
+List `/admin/orders` / `/sales/orders`; create `/admin/orders/create` / `/sales/orders/create`; detail `/admin/orders/[id]` / `/sales/orders/[id]`. Create directly for an active customer from the order list or customer detail. Choose products, quantities and line discounts; executives use the wholesale price and Super Admin may override it. MOQ is checked by the server. Customer and product names/SKUs/prices are snapshotted on the order. Order number is generated by the server. Orders start as `DRAFT`; submit for approval from order detail.
 
 Super Admin selects **Warehouse for approval reservation**, clicks availability check, reviews each required/available/short quantity, then confirms/approves. Confirmation reserves all lines as a unit if every line has enough available stock. Shortage does not reserve partial stock and produces shortage history. Other order actions depend on current status; UI includes hold, reject and cancel with reasons. Status enum: `DRAFT`, `AWAITING_APPROVAL`, `CONFIRMED`, `ON_HOLD`, `REJECTED`, `CANCELLED`. Inspect order events and reservation history on detail. Executive can see owned order and warehouse operations as access policy allows; approval/reservation is Super Admin-only.
 
 Reservation is reflected in StockBalance (`quantityReserved`), not a physical stock movement. Warehouse queue only includes confirmed orders with active reservations.
 
-## 11. Warehouse, picking, packing and dispatch
+## 10. Warehouse, picking, packing and dispatch
 
 Routes: admin `/admin/warehouse/orders`, detail `/admin/warehouse/orders/[id]`; executive `/sales/warehouse/orders`, detail `/sales/warehouse/orders/[id]`. Admin warehouse setup `/admin/warehouse`.
 
@@ -188,7 +180,7 @@ Routes: admin `/admin/warehouse/orders`, detail `/admin/warehouse/orders/[id]`; 
 
 **Partial dispatch:** quantities can be dispatched up to the remaining packed amount. Confirm a 60-piece dispatch from packed 100; later pack/dispatch the remaining 40. Each confirmed dispatch is separate and can be invoiced once. Do not try to invoice un-dispatched or un-packed quantities.
 
-## 12. Billing setup (Super Admin)
+## 11. Billing setup (Super Admin)
 
 Open `/admin/settings` and settings tabs. The billing settings intentionally leave legal/tax values blank; enter real values only after business/accountant approval. There is no safe generic GSTIN, PAN, GST rate, or HSN example to copy.
 
@@ -200,12 +192,12 @@ Open `/admin/settings` and settings tabs. The billing settings intentionally lea
 | Product Tax Mapping `/admin/settings/product-tax` | Per product choose active HSN/SAC and optional active GST rate (or use HSN rate/no mapping); Tax-inclusive wholesale price checkbox; Tax UOM; Save. A product without resolvable tax mapping may fail invoice preview/issue. |
 | Financial Year `/admin/settings/financial-year` | Create/activate date-range financial year. Configure one active year before allocating invoice/credit note numbers. The numbering service uses applicable active FY. |
 | Financial Year & Numbering `/admin/settings/numbering` | Configure document type, prefix/format, sequence/start and optional branch behavior as available; active config is needed to issue. Types in schema: `TAX_INVOICE`, `PROFORMA_INVOICE`, `DELIVERY_CHALLAN`, `CREDIT_NOTE`, `DEBIT_NOTE`. Invoice numbering can include warehouse branch code; exact result depends on saved config and branch code. |
-| Charges & Rounding `/admin/settings/charges` | Configure charge code/label, taxable flag, tax-inclusive flag/rate and active state; invoice draft accepts configured charge amount(s). Rounding precision/method is on company settings. Discount is captured on quote/order; no separate discount settings page is present. |
+| Charges & Rounding `/admin/settings/charges` | Configure charge code/label, taxable flag, tax-inclusive flag/rate and active state; invoice draft accepts configured charge amount(s). Rounding precision/method is on company settings. Order discounts are captured on each order; no separate discount settings page is present. |
 | Tax preview `/admin/settings/tax-preview` | Enter Sales Order ID; choose Intra-state (CGST + SGST) or Inter-state (IGST); click **Calculate preview**. Preview only, not invoice issue. Use POS rules only after accountant confirmation. |
 
 Warehouse setup and stock-in must also precede order approval. Cloudinary is needed for private GST document storage and private invoice PDFs. Payment modes are fixed in UI: Cash, UPI, Bank Transfer, Card, Other; there is no gateway configuration.
 
-## 13. Invoice generation and lifecycle (Super Admin only)
+## 12. Invoice generation and lifecycle (Super Admin only)
 
 Invoice issuance, payment recording/reversal, cancellation, PDF regeneration and credit-note issuance are restricted to `SUPER_ADMIN`. Sales can view only invoices in their authorized customer/order scope. Invoice generation is manual, never automatic after dispatch.
 
@@ -235,7 +227,7 @@ Order 100 pieces → pick/pack → confirm dispatch 1 of 60 → create/issue inv
 
 Admin `/admin/credit-notes`, detail `/admin/credit-notes/[id]`; sales routes are read-only scoped views `/sales/credit-notes`. From an issued invoice, enter reason and item credit quantities (bounded by invoiced quantity) and create draft; review and issue. Status: `DRAFT`, `ISSUED`, `CANCELLED`. Tax amounts derive from original invoice line snapshots. Credit notes support quantity-based item credits only: independent price/discount/tax/charge adjustment and credit-note PDF are not implemented. Issuing note updates credited/customer-credit/outstanding accounting values; do not treat customer-credit balance as a refund transaction—the application does not execute bank refunds.
 
-## 14. Page-by-page quick reference
+## 13. Page-by-page quick reference
 
 | Module | Role / navigation | Route | Main usable action |
 |---|---|---|---|
@@ -246,25 +238,23 @@ Admin `/admin/credit-notes`, detail `/admin/credit-notes/[id]`; sales routes are
 | Customers | Admin → Customers; Sales → My Customers | `/admin/customers`, `/sales/customers` | Search, detail/history; Admin edit/status. |
 | Products/taxonomy | Admin → Catalogue & Inventory | `/admin/products`, `/admin/categories`, `/admin/collections` | Maintain catalogue and storefront visibility. |
 | Inventory/warehouses | Admin → Catalogue & Inventory | `/admin/inventory`, `/admin/warehouse` | Balances, stock movements/transfers, warehouse records. |
-| Quotations | Admin or Sales → Quotations | `/admin/quotations`, `/sales/quotations` | Draft, mark sent, record decision, revise, print, convert accepted quote. |
-| Sales orders | Admin or Sales → Sales Orders/My Orders | `/admin/orders`, `/sales/orders` | View; Admin approval/reservation. |
+| Sales orders | Admin or Sales → Sales Orders/My Orders | `/admin/orders`, `/sales/orders`; create `/admin/orders/create`, `/sales/orders/create` | Select customer/products, submit for approval; Admin approves/reserves. |
 | Warehouse | Admin/Sales → Warehouse & Dispatch | `/admin/warehouse/orders`, `/sales/warehouse/orders` | Pick, pack, dispatch, update delivery. |
 | Billing configuration | Admin → Settings | `/admin/settings/*` | Company/tax/master/numbering/charges configuration. |
 | Invoice creation | Super Admin → Invoices | `/admin/invoices` | Preview confirmed dispatch, draft, issue, PDF. |
 | Invoice viewing | Authorized Admin/Sales | `/admin/invoices`, `/sales/invoices` | Scoped list/detail/PDF. |
 | Payments / notes | Admin → Invoices/Credit Notes | `/admin/invoices/[id]`, `/admin/credit-notes` | Record/reverse payment, cancel, create/issue credit note. |
 
-## 15. Incomplete or absent functionality
+## 14. Incomplete or absent functionality
 
 - Admin dashboard is a placeholder; no reports or summary tiles.
 - Sidebar links without page routes: Suppliers, Purchase Orders, Goods Receipt, Payments (separate page), POS, HRMS, Attendance, Leave, Payroll, Expenses, Finance, Reports, Users & Access, Audit Logs. No customer self-service account flow is evidenced.
 - Executive invitation is not email-delivered. Activation token handling requires an operator to provide the URL.
-- No external communication (email/WhatsApp), payment gateway, antivirus scanning, automated dispatch-to-invoice, scheduled overdue task, or automatic lead/quotation notification is evidenced.
-- Quotation tax is currently zero; invoice uses separate billing configuration. Quote PDF is browser print/save, not generated/stored server-side.
+- No external communication (email/WhatsApp), payment gateway, antivirus scanning, automated dispatch-to-invoice, or scheduled overdue task is evidenced.
 - Picking discrepancy does not expose an operator resolution workflow beyond note and quantity. Packing UI creates one package per action and does not capture weight.
 - Credit note scope is quantity based and there is no credit note PDF.
 - No database seed scripts are relied on by this guide. The checked-out repository does not include a current environment/production data inventory. Existing credentials, user records, tax records, Cloudinary config and applied migrations must be confirmed in the target environment.
 
-## 16. Prerequisites and safe test guidance
+## 15. Prerequisites and safe test guidance
 
-Before attempting full E2E, have authorized test Super Admin credentials, active migrations/client matching this checkout, reachable PostgreSQL, Cloudinary credentials for document/PDF paths, at least one active warehouse, active category and product, stock-in quantity, and approved company/GST/HSN/product-tax/FY/numbering/charge configuration. Use accountant-approved tax data; use clearly synthetic buyer data and never invent a real GSTIN/PAN. Create a Sales Executive with a test mailbox and a safe activation-token handoff. Add product and stock before attempting quote/order/dispatch. See `NEXTRA_TEST_DATA_PREPARATION.md` and `NEXTRA_END_TO_END_TEST_CHECKLIST.md` alongside this manual.
+Before attempting full E2E, have authorized test Super Admin credentials, applied migrations/client matching this checkout, reachable PostgreSQL, Cloudinary credentials for document/PDF paths, at least one active warehouse, active category and product, stock-in quantity, and approved company/GST/HSN/product-tax/FY/numbering/charge configuration. Use accountant-approved tax data; use clearly synthetic buyer data and never invent a real GSTIN/PAN. Create a Sales Executive with a test mailbox and a safe activation-token handoff. Add product and stock before attempting an order/dispatch. See `NEXTRA_TEST_DATA_PREPARATION.md` and `NEXTRA_END_TO_END_TEST_CHECKLIST.md` alongside this manual.

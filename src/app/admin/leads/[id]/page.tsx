@@ -1379,11 +1379,11 @@ export default function AdminLeadDetailPage({
                 "CONTACTED",
                 "VERIFICATION_PENDING",
                 "QUALIFIED",
-                "QUOTATION_ORDER_DISCUSSION",
+                ...(lead.stage === "QUOTATION_ORDER_DISCUSSION" ? ["QUOTATION_ORDER_DISCUSSION"] : []),
                 "LOST",
                 "ON_HOLD",
               ].map((s) => (
-                <option key={s}>{s}</option>
+                <option key={s} value={s}>{s === "QUOTATION_ORDER_DISCUSSION" ? "Legacy sales discussion" : s}</option>
               ))}
             </select>
           )}
@@ -1449,7 +1449,6 @@ export default function AdminLeadDetailPage({
                   "CONTACTED",
                   "VERIFICATION_PENDING",
                   "QUALIFIED",
-                  "QUOTATION_ORDER_DISCUSSION",
                   "ON_HOLD",
                 ].map((x) => (
                   <option key={x}>{x}</option>

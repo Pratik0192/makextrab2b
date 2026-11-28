@@ -71,7 +71,6 @@ export async function calculateDispatchInvoice(dispatchId: string, treatment: Su
         salesOrder: {
           include: {
             customer: true,
-            quotation: true,
             dispatches: { where: { status: "CONFIRMED" }, include: { items: { include: { packageItem: { include: { salesOrderItem: true } } } } } },
             invoices: { include: { items: true } },
             items: { include: { product: { include: { hsnSac: { include: { gstRate: true } }, gstRate: true } } } },

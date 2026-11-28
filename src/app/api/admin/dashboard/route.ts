@@ -85,12 +85,12 @@ export async function GET(request: NextRequest) {
   try {
     const [
       totalLeads, newLeads, previousLeads, qualifiedLeads, convertedLeads, previousConvertedLeads, allConvertedLeads,
-      pipelineRows, priorityRows, totalCustomers, customers, quotationTotal, quotationRows, orderRows,
+      pipelineRows, priorityRows, totalCustomers, customers, orderRows,
       invoiceSummary, invoiceCount, previousInvoiceSummary, payments, creditNotes, pendingInvoices, outstandingSummary,
       activeProducts, activeWarehouses, stockSummary, lowStockRows,
-      followUps, recentLeads, recentQuotations, recentOrders, recentInvoices,
+      followUps, recentLeads, recentOrders, recentInvoices,
       executives, company, leadTrend, conversionTrend, invoiceTrend, topProducts,
-      leadActivities, assignments, quotationEvents, orderEvents, deliveryEvents,
+      leadActivities, assignments, orderEvents, deliveryEvents,
       invoiceEvents, paymentEvents, creditEvents,
     ] = await Promise.all([
       prisma.lead.count({ where: activeLead }),
@@ -104,8 +104,6 @@ export async function GET(request: NextRequest) {
       prisma.lead.groupBy({ by: ["priority"], where: activeLead, _count: { _all: true } }),
       prisma.customer.count(),
       prisma.customer.count({ where: { createdAt: { gte: range.from, lt: range.to } } }),
-      prisma.quotation.count({ where: { quotationDate: { gte: range.from, lt: range.to }, status: { not: "CANCELLED" } } }),
-      prisma.quotation.groupBy({ by: ["status"], where: { quotationDate: { gte: range.from, lt: range.to }, status: { not: "CANCELLED" } }, _count: { _all: true } }),
       prisma.salesOrder.groupBy({ by: ["status"], where: { orderDate: { gte: range.from, lt: range.to }, status: { not: "CANCELLED" } }, _count: { _all: true } }),
       prisma.invoice.aggregate({ where: invoiceWhere(range), _sum: { grandTotal: true }, _count: { _all: true } }),
       prisma.invoice.count({ where: invoiceWhere(range) }),
@@ -127,7 +125,6 @@ export async function GET(request: NextRequest) {
       `, range),
       prisma.leadFollowUp.findMany({ where: { status: "PENDING", dueAt: { lte: new Date(now.getTime() + 14 * 86400000) }, lead: activeLead }, orderBy: [{ dueAt: "asc" }, { id: "asc" }], take: 10, select: { id: true, dueAt: true, note: true, status: true, lead: { select: { id: true, referenceNumber: true, businessName: true } }, assignedTo: { select: { firstName: true, lastName: true } } } }),
       prisma.lead.findMany({ where: { createdAt: { gte: range.from, lt: range.to }, ...activeLead }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, referenceNumber: true, businessName: true, city: true, stage: true, source: true, createdAt: true } }),
-      prisma.quotation.findMany({ where: { quotationDate: { gte: range.from, lt: range.to }, status: { not: "CANCELLED" } }, orderBy: { quotationDate: "desc" }, take: 5, select: { id: true, quotationNumber: true, status: true, quotationDate: true, totalAmount: true, customer: { select: { businessName: true } } } }),
       prisma.salesOrder.findMany({ where: { orderDate: { gte: range.from, lt: range.to }, status: { not: "CANCELLED" } }, orderBy: { orderDate: "desc" }, take: 5, select: { id: true, orderNumber: true, status: true, orderDate: true, totalAmount: true, customer: { select: { businessName: true } } } }),
       prisma.invoice.findMany({ where: { ...invoiceWhere(range), invoiceNumber: { not: null } }, orderBy: { issuedAt: "desc" }, take: 5, select: { id: true, invoiceNumber: true, status: true, issuedAt: true, grandTotal: true, customer: { select: { businessName: true } } } }),
       prisma.user.findMany({ where: { role: "SALES_EXECUTIVE", isActive: true }, orderBy: [{ firstName: "asc" }, { lastName: "asc" }], take: 50, select: { id: true, firstName: true, lastName: true } }),
@@ -148,7 +145,6 @@ export async function GET(request: NextRequest) {
       `, range),
       prisma.leadActivity.findMany({ where: { createdAt: { gte: range.from, lt: range.to } }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, activityType: true, description: true, createdAt: true, lead: { select: { id: true, referenceNumber: true, businessName: true, mergedIntoLeadId: true } }, createdBy: { select: { firstName: true, lastName: true } } } }),
       prisma.leadAssignment.findMany({ where: { createdAt: { gte: range.from, lt: range.to } }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, createdAt: true, lead: { select: { id: true, referenceNumber: true, businessName: true, mergedIntoLeadId: true } }, assignedTo: { select: { firstName: true, lastName: true } }, assignedBy: { select: { firstName: true, lastName: true } } } }),
-      prisma.quotationEvent.findMany({ where: { createdAt: { gte: range.from, lt: range.to } }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, action: true, createdAt: true, quotation: { select: { id: true, quotationNumber: true, customer: { select: { businessName: true } } } }, actor: { select: { firstName: true, lastName: true } } } }),
       prisma.salesOrderEvent.findMany({ where: { createdAt: { gte: range.from, lt: range.to } }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, action: true, createdAt: true, salesOrder: { select: { id: true, orderNumber: true, customer: { select: { businessName: true } } } }, actor: { select: { firstName: true, lastName: true } } } }),
       prisma.deliveryStatusEvent.findMany({ where: { createdAt: { gte: range.from, lt: range.to } }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, previousStatus: true, newStatus: true, createdAt: true, dispatch: { select: { id: true, reference: true, salesOrder: { select: { id: true, customer: { select: { businessName: true } } } } } }, actor: { select: { firstName: true, lastName: true } } } }),
       prisma.invoiceEvent.findMany({ where: { createdAt: { gte: range.from, lt: range.to } }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, action: true, createdAt: true, invoice: { select: { id: true, invoiceNumber: true, customer: { select: { businessName: true } } } }, actor: { select: { firstName: true, lastName: true } } } }),
@@ -188,7 +184,6 @@ export async function GET(request: NextRequest) {
       ...recentLeads.map((item) => ({ id: `created-${item.id}`, kind: "lead", title: "New lead created", detail: `${item.referenceNumber} · ${item.businessName}`, actor: item.source === "WEBSITE" ? "Website enquiry" : `Source: ${item.source.replaceAll("_", " ").toLowerCase()}`, at: item.createdAt, href: `/admin/leads/${item.id}` })),
       ...leadActivities.filter((item) => !item.lead.mergedIntoLeadId).map((item) => ({ id: `lead-${item.id}`, kind: "lead", title: item.description, detail: `${item.lead.referenceNumber} · ${item.lead.businessName}`, actor: actorName(item.createdBy), at: item.createdAt, href: `/admin/leads/${item.lead.id}` })),
       ...assignments.filter((item) => !item.lead.mergedIntoLeadId).map((item) => ({ id: `assign-${item.id}`, kind: "assignment", title: `Lead assigned to ${actorName(item.assignedTo)}`, detail: `${item.lead.referenceNumber} · ${item.lead.businessName}`, actor: actorName(item.assignedBy), at: item.createdAt, href: `/admin/leads/${item.lead.id}` })),
-      ...quotationEvents.map((item) => ({ id: `quote-${item.id}`, kind: "quotation", title: item.action.replaceAll("_", " ").toLowerCase(), detail: `${item.quotation.quotationNumber} · ${item.quotation.customer.businessName}`, actor: actorName(item.actor), at: item.createdAt, href: `/admin/quotations/${item.quotation.id}` })),
       ...orderEvents.map((item) => ({ id: `order-${item.id}`, kind: "order", title: item.action.replaceAll("_", " ").toLowerCase(), detail: `${item.salesOrder.orderNumber} · ${item.salesOrder.customer.businessName}`, actor: actorName(item.actor), at: item.createdAt, href: `/admin/orders/${item.salesOrder.id}` })),
       ...deliveryEvents.map((item) => ({ id: `dispatch-${item.id}`, kind: "dispatch", title: `Dispatch moved to ${item.newStatus.replaceAll("_", " ").toLowerCase()}`, detail: `${item.dispatch.reference} · ${item.dispatch.salesOrder.customer.businessName}`, actor: actorName(item.actor), at: item.createdAt, href: `/admin/warehouse/orders/${item.dispatch.salesOrder.id}` })),
       ...invoiceEvents.map((item) => ({ id: `invoice-${item.id}`, kind: "invoice", title: item.action.replaceAll("_", " ").toLowerCase(), detail: `${item.invoice.invoiceNumber ?? "Invoice draft"} · ${item.invoice.customer.businessName}`, actor: actorName(item.actor), at: item.createdAt, href: `/admin/invoices/${item.invoice.id}` })),
@@ -202,7 +197,6 @@ export async function GET(request: NextRequest) {
     const onHand = stockSummary._sum.quantityOnHand ?? 0;
     const reserved = stockSummary._sum.quantityReserved ?? 0;
     const blocked = stockSummary._sum.quantityBlocked ?? 0;
-    const quotationCounts = Object.fromEntries(quotationRows.map((row) => [row.status, row._count._all]));
     const orderCounts = Object.fromEntries(orderRows.map((row) => [row.status, row._count._all]));
     const pipeline = Object.fromEntries(pipelineRows.map((row) => [row.stage, row._count._all]));
     const priorities = Object.fromEntries(priorityRows.map((row) => [row.priority, row._count._all]));
@@ -221,7 +215,7 @@ export async function GET(request: NextRequest) {
       isDemoData,
       kpis: {
         leads: { total: totalLeads, created: newLeads, previousCreated: previousLeads, qualified: qualifiedLeads, converted: convertedLeads, previousConverted: previousConvertedLeads },
-        customers: totalCustomers, newCustomers: customers, quotations: quotationTotal, pendingQuotations: quotationCounts.SENT ?? 0,
+        customers: totalCustomers, newCustomers: customers,
         confirmedOrders: orderCounts.CONFIRMED ?? 0,
         invoiced: { amount: invoiced, previousAmount: asNumber(previousInvoiceSummary._sum?.grandTotal), count: invoiceCount },
         collected: { amount: collected, count: payments._count._all },
@@ -229,7 +223,7 @@ export async function GET(request: NextRequest) {
         creditNotes: { amount: credited, count: creditNotes._count._all },
       },
       crm: { pipeline, priorities, conversionRate: totalLeads ? allConvertedLeads / totalLeads * 100 : 0, trend: [...pointMap.values()].sort((a, b) => a.date.localeCompare(b.date)) },
-      quotations: quotationCounts, orders: orderCounts,
+      orders: orderCounts,
       sales: {
         trend: [...pointMap.values()].filter((point) => point.invoiced || point.leads || point.converted),
         topProducts: topProducts.map((row) => ({ name: row.name, sku: row.sku, quantity: Number(row.quantity), amount: asNumber(row.amount) })),
@@ -240,7 +234,6 @@ export async function GET(request: NextRequest) {
       activity: activities,
       recent: {
         leads: recentLeads,
-        quotations: recentQuotations.map((item) => ({ ...item, totalAmount: asNumber(item.totalAmount) })),
         orders: recentOrders.map((item) => ({ ...item, totalAmount: asNumber(item.totalAmount) })),
         invoices: recentInvoices.map((item) => ({ ...item, grandTotal: asNumber(item.grandTotal) })),
       },

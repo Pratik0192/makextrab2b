@@ -1,10 +1,10 @@
 # Nextra Wholesale — Test Data Preparation
 
-> Use only in a non-production test environment. All buyer, staff, product and reference values below are synthetic. The user interface generates record IDs, customer codes, quotation/order/dispatch/invoice numbers; do not type the illustrative labels into generated-ID fields. GST rates, HSN/SAC codes, legal identities, PAN, GSTIN, tax treatment and tax totals must come from the actual business and its accountant.
+> Use only in a non-production test environment. All buyer, staff, product and reference values below are synthetic. The user interface generates record IDs, customer codes, order/dispatch/invoice numbers; do not type the illustrative labels into generated-ID fields. GST rates, HSN/SAC codes, legal identities, PAN, GSTIN, tax treatment and tax totals must come from the actual business and its accountant.
 
 ## 1. One connected test scenario
 
-Scenario key: `E2E-SILK-001`. Buyer is **Silk Route Demo**; initial product mix totals 100 pieces across 3 sarees. Use the same buyer email/mobile in enquiry, lead conversion and customer. Assign **Test Sales Executive**. Create quote, accept, convert to order, reserve against **Test Surat Warehouse**, pick/pack all 100 and dispatch 60 then 40. Create one invoice per confirmed dispatch. Later record two manual payments against invoice 1 (one partial, one remainder). Use invoice 2 for reversal/cancellation negatives only in a separate isolated scenario; invoice with any payment history cannot be cancelled.
+Scenario key: `E2E-SILK-001`. Buyer is **Silk Route Demo**; initial product mix totals 100 pieces across 3 sarees. Use the same buyer email/mobile in enquiry, lead conversion and customer. Assign **Test Sales Executive**. Create a direct customer order, submit it, approve/reserve against **Test Surat Warehouse**, pick/pack all 100 and dispatch 60 then 40. Create one invoice per confirmed dispatch. Later record two manual payments against invoice 1 (one partial, one remainder). Use invoice 2 for reversal/cancellation negatives only in a separate isolated scenario; invoice with any payment history cannot be cancelled.
 
 Keep generated IDs/references in this worksheet as they are created:
 
@@ -14,7 +14,6 @@ Keep generated IDs/references in this worksheet as they are created:
 | Executive user ID | __________________ |
 | Customer code / ID | __________________ / __________________ |
 | Product IDs | __________________ |
-| Quotation number / ID | __________________ / __________________ |
 | Sales order number / ID | __________________ / __________________ |
 | Reservation / picking / package references | __________________ |
 | Dispatch references 1 and 2 | __________________ / __________________ |
@@ -136,9 +135,9 @@ Create category `E2E Test Sarees` and optional collection `E2E Test Collection` 
 
 Use active products; the first three form this order. Initial stock is entered as stock-in to a warehouse, not product field. Product tax mapping, tax inclusive flag and tax UOM are configured separately. Add optional images only with safe synthetic product images (JPG/PNG/WEBP, <=10 MB each, max 12).
 
-### G. Quotation
+### G. Direct Sales Order
 
-Use first three products with wholesale prices above, one customer, expiry date in the future and no discounts for a predictable pre-tax check.
+Use the first three active products with configured wholesale prices above, one active customer and no discounts for a predictable pre-tax check.
 
 | Product | Qty | Unit price | Line discount | Gross line total before tax |
 |---|---:|---:|---:|---:|
@@ -147,11 +146,7 @@ Use first three products with wholesale prices above, one customer, expiry date 
 | E2E-SAR-003 | 30 | ₹700.00 | ₹0.00 | ₹21,000.00 |
 | **Subtotal before overall discount** | **100** |  |  | **₹94,500.00** |
 
-Set overall discount `FIXED`, value `0`; or use 1,000 fixed discount in a separate calculation scenario. Fields: customer, valid until, product, quantity, unit price, line discount, overall discount type/value, payment terms (`Test payment per agreed test plan`), delivery terms (`Split dispatch permitted in E2E test`), customer notes, internal notes. Quotation tax is currently 0; expected total in the zero-discount case is ₹94,500 before any invoice-side tax/charge calculation. Executive unit price is read-only; Super Admin can override.
-
-### H. Sales Order
-
-No independent create form: convert an accepted quotation. The application generates the order number; customer, quotation, 3 item snapshots, quantities and prices are copied. Set delivery address/instructions and notes if the conversion UI exposes them; the order uses `DRAFT`/`AWAITING_APPROVAL` flow as implemented. Approver selects warehouse; there is no separate user-entered order number.
+Create `/admin/orders/create` or `/sales/orders/create` (or use Create sales order on customer detail). Choose the customer and first three products; enter quantities, unit prices and line discounts in the table above. Set order discount to `0`. Expected pre-tax total is ₹94,500 before invoice-side tax/charge calculation. Executive unit prices are read-only; Super Admin can override. The app generates the order number, snapshots customer/products/prices, creates a `DRAFT` and records activity. Submit for approval; only Super Admin approval reserves inventory.
 
 ## 5. Warehouse inventory, fulfillment and billing
 
@@ -200,7 +195,7 @@ Before issuing, Super Admin configures Company Profile (real business values), G
 
 | Value | Source |
 |---|---|
-| Customer/order/dispatch/items/quantities/prices/discount snapshots | Automatically from confirmed dispatch, sales order and product/quotation snapshots. Review; do not edit as free values. |
+| Customer/order/dispatch/items/quantities/prices/discount snapshots | Automatically from confirmed dispatch and Sales Order snapshots. Review; do not edit as free values. |
 | Tax treatment | User selects `INTRA_STATE` or `INTER_STATE` after accountant confirmation. |
 | Place of supply | User-entered approved place. |
 | State code | User-entered two-character code. |
@@ -209,7 +204,7 @@ Before issuing, Super Admin configures Company Profile (real business values), G
 | Configured charge amounts | User-entered amount per configured charge; optional, >=0. |
 | Invoice number/date/PDF version/issuer | Generated on issue. |
 
-Expected invoice 1 quantities A/B/C = 24/18/18; invoice 2 = 16/12/12. With no discounts/charges and test prices, pre-tax taxable basis is `qty × quoted unit price` summed. For invoice 1: 24×1200 + 18×850 + 18×700 = **₹52,500**. Invoice 2: 16×1200 + 12×850 + 12×700 = **₹42,000**. GST split/tax inclusive handling/roundoff/grand total depend on configured HSN/GST rates, tax-inclusive flags, treatment and charges; do not prepopulate an invented tax amount. Validate preview and issued PDF against accountant-approved expected calculation.
+Expected invoice 1 quantities A/B/C = 24/18/18; invoice 2 = 16/12/12. With no discounts/charges and test prices, pre-tax taxable basis is `quantity × Sales Order unit price` summed. For invoice 1: 24×1200 + 18×850 + 18×700 = **₹52,500**. Invoice 2: 16×1200 + 12×850 + 12×700 = **₹42,000**. GST split/tax inclusive handling/roundoff/grand total depend on configured HSN/GST rates, tax-inclusive flags, treatment and charges; do not prepopulate an invented tax amount. Validate preview and issued PDF against accountant-approved expected calculation.
 
 ### M. Payments
 
@@ -248,8 +243,8 @@ GST and legal prerequisites cannot be safely filled from repository defaults. No
 | Enquiry | New website lead, generated reference; initial `NEW`, priority `MEDIUM`; duplicate candidate may be created for matching data and reviewed in CRM. |
 | Assignment | Test Executive becomes owner; lead list/detail/history shows assignment. |
 | Conversion | Customer with auto customer code, `ACTIVE`, link to original lead, assigned executive carried forward. |
-| Quotation | Draft generated reference; 3 item snapshots; zero tax in current quotation UI; expected pre-tax total ₹94,500 when no discounts. |
-| Acceptance/conversion | Quote `ACCEPTED`; one related Sales Order, generated number; duplicate conversion blocked. |
+| Direct order | Generated order number; 3 item snapshots; draft total ₹94,500 before invoice tax/charges; no stock reservation before approval. |
+| Submission/approval | Sales Executive submits; Super Admin approves and reserves stock atomically. |
 | Reservation | With sufficient stock, 40/30/30 reserved; available 80/50/45; order `CONFIRMED`. On shortage, no partial reservation. |
 | Fulfillment | Pick/pack quantities recorded; dispatch 1 total 60 and dispatch 2 total 40; delivery events visible. |
 | Invoice | Invoice 1 qty totals 60 and pre-tax basis ₹52,500; invoice 2 qty totals 40 and pre-tax basis ₹42,000. Exactly one invoice per dispatch. Tax total conditional on authorized config. |
@@ -268,10 +263,9 @@ Actual stage/status transitions, generated numbering, concurrency and persisted 
 | Unassigned lead | Leave lead unassigned | Executive cannot see it; Super Admin can assign. |
 | Cross-owner lead | Log in Executive B; open Executive A lead/list or call endpoint | Access denied/scoped out. |
 | Incomplete conversion | Clear required conversion business/contact/location field and confirm | Server validation rejects; no Customer created. |
-| Product without price | Create product/API record with no wholesale price or clear price | Product form requires positive price; if a legacy missing-price product appears, quote selector disables it. |
+| Product without price | Create product/API record with no wholesale price or clear price | Product form requires positive price; if a legacy missing-price product appears, the order selector cannot use it. |
 | Product missing tax mapping | Preview an invoice for product without usable HSN/rate | Invoice preview/issue should report missing tax configuration; correct mapping first. |
-| Below MOQ | Quote quantity under product minimum | Validation rejects quotation. |
-| Unaccepted quote conversion | Attempt convert DRAFT/SENT quote | Reject; only ACCEPTED quote eligible. |
+| Below MOQ | Create an order with quantity below product minimum | Server rejects the direct-order request. |
 | Insufficient stock | Approve order with any one line below required available stock | No partial reservation; shortage shown/recorded; order is not confirmed for fulfillment. |
 | Partial dispatch | Dispatch fewer than packed quantities, then second dispatch remaining | Both valid separately; totals cannot exceed packed remainder. |
 | Undispatched quantity invoice | Attempt invoice for ordered but not dispatched qty | Not available in dispatch invoice preview; invoice is based on confirmed dispatch lines. |

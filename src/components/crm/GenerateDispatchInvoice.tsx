@@ -208,7 +208,7 @@ export default function GenerateDispatchInvoice({
                         "Prior invoiced",
                         "This invoice",
                         "Remaining",
-                        "Quoted / pc",
+                        "Sales Order price / pc",
                         "Discount",
                         "Taxable",
                         "GST",

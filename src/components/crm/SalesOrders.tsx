@@ -127,13 +127,12 @@ export default function SalesOrders() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-semibold">Sales Orders</h2>
-            <p className="text-sm text-slate-500">
-              Accepted quotations converted into orders
-            </p>
+            <p className="text-sm text-slate-500">Orders created directly for customers</p>
           </div>
+          <Link href={`${base}/orders/create`} className="rounded bg-[#9D174D] px-3 py-2 text-sm text-white">Create sales order</Link>
           <input
             className="rounded border border-slate-300 bg-white px-3 py-2"
-            placeholder="Search order, customer, quotation"
+            placeholder="Search order or customer"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -145,7 +144,6 @@ export default function SalesOrders() {
                 {[
                   "Order",
                   "Customer",
-                  "Quotation",
                   "Date",
                   "Status",
                   "Reservation",
@@ -160,7 +158,7 @@ export default function SalesOrders() {
             <tbody>
               {items
                 .filter((i) =>
-                  `${i.orderNumber} ${i.customer.businessName} ${i.quotation.quotationNumber}`
+                  `${i.orderNumber} ${i.customer.businessName}`
                     .toLowerCase()
                     .includes(q.toLowerCase()),
                 )
@@ -175,7 +173,6 @@ export default function SalesOrders() {
                       </Link>
                     </td>
                     <td className="p-3">{i.customer.businessName}</td>
-                    <td className="p-3">{i.quotation.quotationNumber}</td>
                     <td className="p-3">
                       {new Date(i.orderDate).toLocaleDateString()}
                     </td>
@@ -199,8 +196,8 @@ export default function SalesOrders() {
                 ))}
               {items.length === 0 && (
                 <tr>
-                  <td className="p-6 text-slate-500" colSpan={7}>
-                    No sales orders yet. Convert an accepted quotation to begin.
+                  <td className="p-6 text-slate-500" colSpan={6}>
+                    No sales orders yet. Create an order from a customer to begin.
                   </td>
                 </tr>
               )}
@@ -224,9 +221,7 @@ export default function SalesOrders() {
             Sales Orders
           </Link>
           <h2 className="mt-1 text-2xl font-semibold">{record.orderNumber}</h2>
-          <p className="text-sm text-slate-500">
-            {record.status} · Quotation {record.quotation.quotationNumber}
-          </p>
+          <p className="text-sm text-slate-500">{record.status}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {["DRAFT", "REJECTED"].includes(record.status) && (
@@ -466,7 +461,7 @@ export default function SalesOrders() {
                 "Product",
                 "SKU",
                 "Qty",
-                "Quoted / piece",
+                "Unit price / piece",
                 "Discount",
                 "Line total",
               ].map((v) => (

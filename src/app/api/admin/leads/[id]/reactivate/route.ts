@@ -4,7 +4,7 @@ import { apiError, apiSuccess } from "@/lib/api-response";
 import { isAuthFailure, requireLeadOwnership, requireLeadUser } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 
-const allowedStages: LeadStage[] = ["CONTACT_ATTEMPTED", "CONTACTED", "VERIFICATION_PENDING", "QUALIFIED", "QUOTATION_ORDER_DISCUSSION", "ON_HOLD"];
+const allowedStages: LeadStage[] = ["CONTACT_ATTEMPTED", "CONTACTED", "VERIFICATION_PENDING", "QUALIFIED", "ON_HOLD"];
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const user = await requireLeadUser(request); if (isAuthFailure(user)) return user;
   const { id } = await context.params;

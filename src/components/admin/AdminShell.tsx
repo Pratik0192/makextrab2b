@@ -3,7 +3,7 @@
 import {
   Activity, Archive, ArrowDownToLine, BarChart3, Boxes, Building2,
   CalendarDays, ChartNoAxesCombined, ChevronRight, ClipboardList, CreditCard,
-  FileClock, FileText, LayoutDashboard, LogOut, Menu, Package, Receipt, FileMinus2,
+  FileClock, LayoutDashboard, LogOut, Menu, Package, Receipt, FileMinus2,
   Settings, ShoppingBag, ShoppingCart, Store, UserRound, Users, Wallet, X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -24,7 +24,6 @@ const navigation: NavigationGroup[] = [
     { label: "Lost Leads", href: "/admin/leads/lost", icon: FileClock },
     { label: "Sales Executives", href: "/admin/sales-executives", icon: UserRound },
     { label: "Customers", href: "/admin/customers", icon: UserRound },
-    { label: "Quotations", href: "/admin/quotations", icon: FileText },
     { label: "Sales Orders", href: "/admin/orders", icon: ShoppingCart },
     { label: "Warehouse & Dispatch", href: "/admin/warehouse/orders", icon: Boxes },
   ] },
@@ -75,7 +74,7 @@ function titleForPath(pathname: string): string {
 
 function Navigation({ onNavigate, role }: { onNavigate?: () => void; role: AuthenticatedUser["role"] }) {
   const pathname = usePathname();
-  const groups = role === "SALES_EXECUTIVE" ? [{ label: "Customer & Sales", items: [{ label: "Leads", href: "/admin/leads", icon: Users }, { label: "Lost Leads", href: "/admin/leads/lost", icon: FileClock }, { label: "My Customers", href: "/sales/customers", icon: UserRound }, { label: "My Quotations", href: "/sales/quotations", icon: FileText }] }] : navigation;
+  const groups = role === "SALES_EXECUTIVE" ? [{ label: "Customer & Sales", items: [{ label: "Leads", href: "/admin/leads", icon: Users }, { label: "Lost Leads", href: "/admin/leads/lost", icon: FileClock }, { label: "My Customers", href: "/sales/customers", icon: UserRound }, { label: "My Orders", href: "/sales/orders", icon: ShoppingCart }] }] : navigation;
   const activeHref = groups.flatMap((group) => group.items).filter((item) => pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`))).sort((a,b)=>b.href.length-a.href.length)[0]?.href;
   return <nav aria-label="Administration navigation" className="space-y-6 px-3 pb-5">
     {groups.map((group) => <div key={group.label}>

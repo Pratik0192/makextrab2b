@@ -92,22 +92,19 @@
 - [ ] Confirm conversion only after business/contact details are acceptable; capture generated customer code.
 - [ ] Verify lead is retained and marked converted; Customer is created once and links to original lead and Test Executive.
 - [ ] Open `/admin/customers`; search generated customer code/business name. Verify default status `ACTIVE` and customer contact/location data.
-- [ ] Open customer detail and verify original lead, interests/documents/activity, assigned executive, quotation history empty.
+- [ ] Open customer detail and verify original lead, interests/documents/activity, assigned executive and sales order history.
 - [ ] In a separate Admin test, edit customer or change status to `INACTIVE`, then restore `ACTIVE`; verify executives do not see edit/status controls.
 
-## 7. Create, send, accept quotation and convert order
+## 7. Create a direct customer sales order
 
-- [ ] Open customer detail **Create quotation**, or `/sales/quotations/create` as assigned executive.
-- [ ] Verify customer selected. Select Products A/B/C with quantities 40/30/30, wholesale prices 1200/850/700 and zero line discounts.
-- [ ] Verify executive unit prices are read-only. Sign in as Super Admin in separate test to verify override control; do not alter main scenario prices.
-- [ ] Set Valid until to future date, fixed overall discount 0, synthetic payment/delivery terms, customer notes and internal notes.
-- [ ] Save draft; capture quotation number; verify draft detail, snapshot prices and zero quote tax.
-- [ ] Print/Save PDF in browser and verify print rendering. Confirm no email/share button/integration exists.
-- [ ] Mark sent; verify status `SENT` and sent timestamp/actor.
-- [ ] Record accepted (the current workflow is staff-recorded, not buyer portal acceptance); verify `ACCEPTED`.
-- [ ] Convert to Sales Order; capture order number; verify item quantities/prices/customer/quotation snapshots.
-- [ ] Attempt conversion from a separate unaccepted quote; verify backend rejects it.
-- [ ] Attempt a second conversion of the accepted quote; verify only one Sales Order can be created.
+- [ ] Open customer detail **Create sales order**, or `/sales/orders/create` as the assigned executive.
+- [ ] Verify the selected customer is active and assigned to the executive. Add Products A/B/C with quantities 40/30/30, wholesale prices 1200/850/700 and zero line discounts.
+- [ ] Verify executive unit prices are read-only. As Super Admin, confirm price override is available without changing the main scenario prices.
+- [ ] Try quantity below MOQ and verify server validation rejects it. Restore 40/30/30.
+- [ ] Create draft; capture order number; verify customer, delivery details, line snapshots, totals and `DIRECT_CUSTOMER_ORDER_CREATED` activity.
+- [ ] Verify no stock is reserved while the order is a draft.
+- [ ] As Sales Executive, submit it for approval. Verify `AWAITING_APPROVAL` and the submission event.
+- [ ] As Super Admin, reject a separate disposable test order and verify a reason is recorded. Keep the main order pending for the approval section.
 
 ## 8. Approve order and reserve inventory
 
@@ -169,8 +166,8 @@
 
 - [ ] Lead reference and source recorded.
 - [ ] Assignment and executive owner verified.
-- [ ] Customer code and lead linkage verified.
-- [ ] Quotation reference/status/price snapshots verified.
+- [ ] Customer code, lead linkage and conversion activity verified.
+- [ ] Direct order customer/product/price snapshots and order activity verified.
 - [ ] Sales Order reference/status and approval event verified.
 - [ ] Reservation quantities and stock available calculations verified.
 - [ ] Picking/packing references and any discrepancy notes verified.

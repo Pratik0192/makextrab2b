@@ -107,6 +107,7 @@ enum CustomerStatus {
   BLOCKED
 }
 
+// Legacy enum and models remain to preserve historical quotation records.
 enum QuotationStatus {
   DRAFT
   SENT
@@ -1015,7 +1016,7 @@ model StockBalance {
 model SalesOrder {
   id                       String                  @id @default(cuid())
   orderNumber              String                  @unique
-  quotationId              String                  @unique
+  quotationId              String?                 @unique
   customerId               String
   createdById              String                  @db.Uuid
   assignedSalesExecutiveId String?                 @db.Uuid
@@ -1039,7 +1040,7 @@ model SalesOrder {
   cancellationReason       String?
   createdAt                DateTime                @default(now())
   updatedAt                DateTime                @updatedAt
-  quotation                Quotation               @relation(fields: [quotationId], references: [id], onDelete: Restrict)
+  quotation                Quotation?              @relation(fields: [quotationId], references: [id], onDelete: Restrict)
   customer                 Customer                @relation(fields: [customerId], references: [id], onDelete: Restrict)
   createdBy                User                    @relation("SalesOrderCreator", fields: [createdById], references: [id], onDelete: Restrict)
   assignedSalesExecutive   User?                   @relation("SalesOrderAssignee", fields: [assignedSalesExecutiveId], references: [id], onDelete: SetNull)
@@ -1252,7 +1253,7 @@ model Invoice {
   dueDate               DateTime?
   customerId            String
   salesOrderId          String
-  quotationId           String
+  quotationId           String?
   dispatchId            String                   @unique
   financialYearId       String?
   numberingConfigId     String?
@@ -1292,7 +1293,7 @@ model Invoice {
   updatedAt             DateTime                 @updatedAt
   customer              Customer                 @relation(fields: [customerId], references: [id], onDelete: Restrict)
   salesOrder            SalesOrder               @relation(fields: [salesOrderId], references: [id], onDelete: Restrict)
-  quotation             Quotation                @relation(fields: [quotationId], references: [id], onDelete: Restrict)
+  quotation             Quotation?               @relation(fields: [quotationId], references: [id], onDelete: Restrict)
   dispatch              Dispatch                 @relation(fields: [dispatchId], references: [id], onDelete: Restrict)
   financialYear         FinancialYear?           @relation(fields: [financialYearId], references: [id], onDelete: Restrict)
   numberingConfig       DocumentNumberingConfig? @relation(fields: [numberingConfigId], references: [id], onDelete: Restrict)

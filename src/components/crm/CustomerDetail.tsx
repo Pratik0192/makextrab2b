@@ -61,10 +61,10 @@ export default function CustomerDetail() {
         </div>
         <div className="flex gap-2">
           <Link
-            href={`${base}/quotations/create?customerId=${record.id}`}
+            href={`${base}/orders/create?customerId=${record.id}`}
             className="h-9 inline-flex items-center rounded bg-[#9D174D] px-4 py-2 text-sm text-white hover:bg-[#BE185D] transition"
           >
-            Create quotation
+            Create sales order
           </Link>
           {base === "/admin" && (
             <>
@@ -191,28 +191,8 @@ export default function CustomerDetail() {
         </section>
       </div>
       <section className="rounded-lg border border-slate-300 bg-white p-5">
-        <h3 className="mb-3 font-semibold">Quotations</h3>
-        {record.quotations.length ? (
-          <div className="space-y-2">
-            {record.quotations.map((q: any) => (
-              <Link
-                key={q.id}
-                href={`${base}/quotations/${q.id}`}
-                className="flex justify-between border border-slate-300-b py-2 text-sm"
-              >
-                <span>
-                  {q.quotationNumber} · {q.status}
-                </span>
-                <span>
-                  ₹{Number(q.totalAmount).toLocaleString("en-IN")} ·{" "}
-                  {new Date(q.quotationDate).toLocaleDateString()}
-                </span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-slate-500">No quotations yet.</p>
-        )}
+        <h3 className="mb-3 font-semibold">Sales order history</h3>
+        {record.salesOrders.length ? <div className="space-y-2">{(record.salesOrders as Array<{id: string; orderNumber: string; status: string; totalAmount: string | number; orderDate: string}>).map((order) => <Link key={order.id} href={`${base}/orders/${order.id}`} className="flex flex-wrap justify-between gap-2 border-b py-2 text-sm last:border-0"><span>{order.orderNumber} · {order.status}</span><span>₹{Number(order.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })} · {new Date(order.orderDate).toLocaleDateString()}</span></Link>)}</div> : <p className="text-sm text-slate-500">No sales orders yet.</p>}
       </section>
     </div>
   );

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthFailure, requireSuperAdmin } from "@/lib/admin-api";
-import { nextReference } from "@/lib/customer-quotation";
+import { nextCustomerCode } from "@/lib/customer";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (!businessAddress) missing.push("Billing address is required.");
       if (!deliveryAddress || !deliveryCity || !deliveryState || !deliveryPincode) missing.push("Complete shipping address, city, state and postal code are required.");
       if (missing.length) throw new Error(missing.join(" "));
-      const customerCode = await nextReference("customer_code_seq", "MXT-CUST");
+      const customerCode = await nextCustomerCode();
       const customer = await tx.customer.create({ data: {
         customerCode, businessName, businessType: lead.businessType, buyerName,
         mobile, whatsappNumber: text("whatsappNumber",lead.whatsappNumber)||null, email, gstin: gstin||null,

@@ -38,7 +38,11 @@ export async function createInvoiceDraft(input: { dispatchId: string; treatment:
   const t = draft.calc.totals;
   const created = await prisma.invoice.create({
     data: {
-      customerId: draft.calc.customer.id, salesOrderId: draft.calc.dispatch.salesOrderId, quotationId: draft.calc.dispatch.salesOrder.quotationId, dispatchId: input.dispatchId, createdById: actorId, supplyTreatment: input.treatment,
+      customer: { connect: { id: draft.calc.customer.id } },
+      salesOrder: { connect: { id: dispatch.salesOrderId } },
+      dispatch: { connect: { id: dispatch.id } },
+      createdBy: { connect: { id: actorId } },
+      supplyTreatment: input.treatment,
       placeOfSupply: input.placeOfSupply.trim().slice(0, 150), stateCode: input.stateCode, reverseCharge: input.reverseCharge === true, companySnapshot: snap(draft.companySnapshot), customerSnapshot: snap(draft.customerSnapshot), shippingSnapshot: snap(draft.shippingSnapshot), chargesSnapshot: snap(draft.calc.charges), dueDate,
       taxableSubtotal: t.taxableSubtotal, cgstTotal: t.cgstTotal, sgstTotal: t.sgstTotal, igstTotal: t.igstTotal, cessTotal: t.cessTotal,
       freightTotal: draft.totals.freight, packingTotal: draft.totals.packing, otherChargesTotal: draft.totals.other, discountTotal: t.discountTotal, roundOff: t.roundOff, grandTotal: t.grandTotal, outstandingAmount: t.grandTotal,
